@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#07070a">
+<title>AutoYouTube</title>
+<style>:root{
+  --bg:#07070a;
+  --red:#ff2d3d; --red2:#c3001c; --redGlow:rgba(255,45,61,.45);
+  --white:#ffffff; --t2:rgba(255,255,255,.66); --t3:rgba(255,255,255,.4);
+  --glass:rgba(255,255,255,.06); --glass2:rgba(255,255,255,.11);
+  --stroke:rgba(255,255,255,.14); --strokeR:rgba(255,45,61,.55);
+  --r-s:14px; --r:22px; --r-l:28px;
+  --shadow:0 10px 40px rgba(0,0,0,.55);
+  --spring:cubic-bezier(.34,1.56,.64,1);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--white);font-family:Inter,"SF Pro Display",-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+body{min-height:100vh;overflow-x:hidden}
+.bgfx{position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(520px 420px at 85% -5%,rgba(255,45,61,.38),transparent 70%),radial-gradient(460px 380px at -10% 45%,rgba(195,0,28,.28),transparent 70%),radial-gradient(420px 360px at 110% 95%,rgba(255,255,255,.09),transparent 70%),var(--bg)}
+.app{position:relative;z-index:1;max-width:440px;margin:0 auto;min-height:100vh;padding:18px 16px 110px}
+h1{font-size:32px;line-height:1.08;margin:6px 0 10px;letter-spacing:-.02em;font-weight:800}
+h2{font-size:22px;margin:22px 0 12px;font-weight:750}
+h3{font-size:16px;margin:0 0 6px;font-weight:700}
+p{margin:0 0 10px;color:var(--t2);line-height:1.45}
+.muted{color:var(--t3);font-size:13px}
+.red{color:var(--red)}
+.glass{background:linear-gradient(160deg,var(--glass2),var(--glass));backdrop-filter:blur(26px) saturate(150%);-webkit-backdrop-filter:blur(26px) saturate(150%);border:1px solid var(--stroke);border-radius:var(--r);box-shadow:var(--shadow),inset 0 1px 0 rgba(255,255,255,.14)}
+.glass-white{background:rgba(255,255,255,.93);color:#0a0a0a;border-radius:var(--r);box-shadow:0 10px 40px rgba(255,255,255,.12);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.glass-white p,.glass-white .muted{color:rgba(0,0,0,.6)}
+.card{padding:16px;margin-bottom:12px;animation:pop .45s var(--spring)}
+@keyframes pop{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
+.row{display:flex;gap:10px;align-items:center}
+.between{justify-content:space-between}
+.wrap{flex-wrap:wrap}
+.col{display:flex;flex-direction:column;gap:10px}
+.btn{border:0;cursor:pointer;font:inherit;font-weight:700;font-size:15px;border-radius:999px;padding:14px 20px;transition:transform .25s var(--spring),opacity .2s;color:var(--white);display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn:active{transform:scale(.95)}
+.btn.primary{background:linear-gradient(135deg,var(--red),var(--red2));box-shadow:0 8px 28px var(--redGlow)}
+.btn.white{background:var(--white);color:#0a0a0a;box-shadow:0 8px 26px rgba(255,255,255,.18)}
+.btn.ghost{background:var(--glass2);border:1px solid var(--stroke);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.btn.sm{padding:9px 14px;font-size:13px}
+.btn.block{width:100%}
+.btn:disabled{opacity:.4}
+.chip{padding:10px 14px;border-radius:999px;background:var(--glass);border:1px solid var(--stroke);cursor:pointer;font-size:14px;font-weight:600;transition:all .25s var(--spring);user-select:none;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.chip.on{background:var(--white);color:#0a0a0a;border-color:var(--white);transform:scale(1.04)}
+.opt{padding:16px;border-radius:var(--r);border:1px solid var(--stroke);background:var(--glass);cursor:pointer;transition:all .25s var(--spring);margin-bottom:10px;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.opt.on{border-color:var(--strokeR);background:linear-gradient(160deg,rgba(255,45,61,.22),rgba(255,45,61,.06));box-shadow:0 0 0 1px var(--strokeR),0 10px 30px rgba(255,45,61,.2)}
+.opt h3{display:flex;gap:8px;align-items:center}
+input,textarea{width:100%;font:inherit;color:var(--white);background:rgba(255,255,255,.05);border:1px solid var(--stroke);border-radius:var(--r-s);padding:13px 14px;outline:none}
+input:focus,textarea:focus{border-color:var(--strokeR)}
+textarea{min-height:110px;resize:vertical}
+input[type=datetime-local]{color-scheme:dark}
+.progress{height:6px;border-radius:9px;background:rgba(255,255,255,.1);overflow:hidden;margin:6px 0 18px}
+.progress>i{display:block;height:100%;background:linear-gradient(90deg,var(--white),var(--red));border-radius:9px;transition:width .5s var(--spring)}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.02em}
+.logo b{width:34px;height:34px;border-radius:11px;background:linear-gradient(135deg,var(--red),var(--red2));display:grid;place-items:center;box-shadow:0 6px 20px var(--redGlow);font-size:14px}
+.tabbar{position:fixed;left:50%;transform:translateX(-50%);bottom:14px;width:calc(100% - 28px);max-width:412px;display:flex;justify-content:space-around;padding:8px;z-index:5;border-radius:26px}
+.tab{flex:1;text-align:center;font-size:11px;color:var(--t3);padding:6px 0;cursor:pointer;border-radius:18px;transition:all .25s var(--spring)}
+.tab .i{font-size:20px;display:block;margin-bottom:2px}
+.tab.on{color:var(--white);background:rgba(255,45,61,.2)}
+.stage-scroll{display:flex;gap:8px;overflow-x:auto;margin:0 -16px;padding:0 16px 6px;scrollbar-width:none}
+.stage-scroll::-webkit-scrollbar{display:none}
+.pill{white-space:nowrap;font-size:12px;font-weight:700;padding:7px 12px;border-radius:999px;background:var(--glass);border:1px solid var(--stroke);display:inline-block}
+.pill.red{background:rgba(255,45,61,.18);border-color:var(--strokeR);color:#fff}
+.pill.white{background:#fff;color:#000;border-color:#fff}
+.vcard{padding:14px;display:flex;gap:12px;align-items:center;cursor:pointer}
+.thumb{width:58px;height:74px;border-radius:14px;flex:none;background:linear-gradient(160deg,#2a0007,#ff2d3d 140%);display:grid;place-items:center;font-size:24px;border:1px solid var(--stroke)}
+.bar{height:5px;border-radius:9px;background:rgba(255,255,255,.1);margin-top:8px;overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--red)}
+.stop{border:1px solid var(--strokeR);color:#fff;background:rgba(255,45,61,.12)}
+pre.prompt{white-space:pre-wrap;word-break:break-word;font-family:"JetBrains Mono",Consolas,monospace;font-size:12.5px;line-height:1.5;background:rgba(0,0,0,.45);border:1px solid var(--stroke);border-radius:var(--r-s);padding:12px;margin:10px 0;color:#f3f3f3}
+.glass-white pre.prompt{background:#0b0b0d}
+.kv{display:grid;grid-template-columns:80px 1fr;gap:6px 10px;font-size:13px;margin:10px 0}
+.kv span:nth-child(odd){color:var(--t3)}
+.subtabs{display:flex;gap:6px;padding:5px;border-radius:999px;margin:12px 0 14px}
+.subtabs div{flex:1;text-align:center;padding:9px 0;border-radius:999px;font-size:13px;font-weight:700;color:var(--t2);cursor:pointer;transition:all .25s var(--spring)}
+.subtabs div.on{background:#fff;color:#000}
+.swipe{position:relative;height:380px;margin:10px 0 18px}
+.scard{position:absolute;inset:0;padding:22px;display:flex;flex-direction:column;justify-content:space-between;touch-action:none;transition:transform .35s var(--spring),opacity .3s}
+.scard .big{font-size:26px;font-weight:800;line-height:1.15}
+.metric{display:flex;gap:8px;flex-wrap:wrap}
+.metric div{flex:1;min-width:90px;padding:10px;border-radius:14px;background:rgba(255,255,255,.06);border:1px solid var(--stroke)}
+.metric b{display:block;font-size:18px}
+.metric small{color:var(--t3);font-size:11px}
+.round{width:64px;height:64px;border-radius:50%;font-size:26px;padding:0}
+.player{position:relative;border-radius:var(--r-l);overflow:hidden;background:#000;aspect-ratio:9/16;max-height:560px;margin:0 auto 12px;border:1px solid var(--stroke)}
+.player.wide{aspect-ratio:16/9}
+.player video{width:100%;height:100%;object-fit:cover;display:block}
+.subs{position:absolute;left:8%;right:8%;bottom:12%;text-align:center;font-weight:800;font-size:20px;line-height:1.3}
+.subs span{background:rgba(255,45,61,.92);padding:2px 8px;border-radius:8px;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+.empty{text-align:center;padding:34px 20px}
+.empty .ill{font-size:54px;margin-bottom:8px;filter:drop-shadow(0 8px 24px var(--redGlow))}
+.toast{position:fixed;left:50%;top:18px;transform:translateX(-50%) translateY(-120px);padding:12px 18px;border-radius:999px;background:#fff;color:#000;font-weight:700;font-size:14px;z-index:50;transition:transform .45s var(--spring);box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.style-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.style{height:110px;border-radius:20px;padding:12px;display:flex;align-items:flex-end;font-weight:800;cursor:pointer;border:2px solid transparent;transition:all .25s var(--spring)}
+.style.on{border-color:#fff;transform:scale(1.03);box-shadow:0 10px 30px rgba(255,45,61,.3)}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.day{aspect-ratio:1;border-radius:12px;background:var(--glass);border:1px solid var(--stroke);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:13px;font-weight:700}
+.day small{font-size:9px;color:var(--red)}
+.day.has{background:linear-gradient(160deg,rgba(255,45,61,.35),rgba(255,45,61,.1));border-color:var(--strokeR)}
+.day.today{outline:2px solid #fff}
+.chart{display:flex;align-items:flex-end;gap:8px;height:140px;margin:12px 0}
+.chart div{flex:1;border-radius:8px 8px 4px 4px;background:linear-gradient(180deg,#fff,var(--red));animation:grow .8s var(--spring);transform-origin:bottom}
+@keyframes grow{from{transform:scaleY(0)}}
+.switch{width:50px;height:30px;border-radius:99px;background:rgba(255,255,255,.18);position:relative;cursor:pointer;flex:none;transition:background .25s}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:transform .3s var(--spring)}
+.switch.on{background:var(--red)}
+.switch.on::after{transform:translateX(20px)}
+.back{cursor:pointer;font-weight:700;color:var(--t2);margin-bottom:6px;display:inline-block}
+.hr{height:1px;background:var(--stroke);margin:14px 0}
+.check{display:flex;gap:10px;align-items:flex-start;padding:8px 0;font-size:14px;cursor:pointer}
+.check input{width:20px;height:20px;accent-color:var(--red);flex:none;margin-top:1px}
+.banner{padding:12px 14px;border-radius:16px;background:rgba(255,45,61,.15);border:1px solid var(--strokeR);margin-bottom:12px;font-weight:600;font-size:14px}
+
+/* v2: ползунки + перевод */
+.ru{display:block;color:rgba(255,255,255,.55);font-size:.82em;font-weight:500;margin-top:4px;line-height:1.35}
+.glass-white .ru{color:rgba(0,0,0,.55)}
+.slider .stop{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.slider .val{font-weight:800;font-size:18px;color:#fff;padding:6px 14px;border-radius:999px;background:linear-gradient(135deg,rgba(255,45,61,.28),rgba(195,0,28,.18));border:1px solid rgba(255,45,61,.55);box-shadow:0 0 18px rgba(255,45,61,.25);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);transition:transform .25s cubic-bezier(.34,1.56,.64,1)}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:10px;padding:0;margin:18px 0 10px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:linear-gradient(90deg,#c3001c 0%,#ff2d3d var(--p,0%),rgba(255,255,255,.08) var(--p,0%));box-shadow:inset 0 1px 3px rgba(0,0,0,.5);cursor:pointer}
+input[type=range]:focus{border-color:rgba(255,45,61,.55)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:30px;height:30px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffffff,#e6e6ec 70%);border:3px solid #ff2d3d;box-shadow:0 0 0 7px rgba(255,45,61,.16),0 6px 20px rgba(255,45,61,.6);transition:transform .2s cubic-bezier(.34,1.56,.64,1)}
+input[type=range]:active::-webkit-slider-thumb{transform:scale(1.18)}
+input[type=range]::-moz-range-thumb{width:26px;height:26px;border-radius:50%;background:#fff;border:3px solid #ff2d3d;box-shadow:0 0 0 7px rgba(255,45,61,.16),0 6px 20px rgba(255,45,61,.6)}
+.ticks{display:flex;justify-content:space-between;gap:4px;font-size:11px;color:rgba(255,255,255,.4)}
+.ticks span{transition:color .2s,transform .2s}
+.ticks span.on{color:#fff;font-weight:800;transform:scale(1.1)}
+.tr-hint{margin:8px 0 4px;min-height:4px}
+.tr-card{display:flex;flex-direction:column;gap:6px;padding:12px 14px;border-radius:14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,45,61,.55);box-shadow:0 0 18px rgba(255,45,61,.18);animation:pop .35s cubic-bezier(.34,1.56,.64,1)}
+.tr-card .pill{align-self:flex-start}
+.tr-card b{font-size:17px;color:#fff}
+</style>
+</head>
+<body>
+<div class="bgfx"></div>
+<div class="app" id="app"></div>
+<nav class="tabbar glass" id="tabbar" style="display:none"></nav>
+<div class="toast" id="toast"></div>
+<input type="file" id="filepick" accept="video/*" style="display:none">
+<script>/* CHANNEL PILOT · данные и генераторы */
+const NL=String.fromCharCode(10);
+const STAGES=['Идея','Сценарий','Сцены','Монтаж','Утверждение','Запланировано','Опубликовано'];
+const NICHES=['Факты и наука','Истории и мистика','Технологии и ИИ','Игры','Мотивация','Юмор','Животные','Космос','Финансы','Еда'];
+const LANGS=['Русский','English','Español','Deutsch','Українська','Français'];
+const STYLES={
+ 'Кино':{bg:'linear-gradient(160deg,#1b1b1b,#7a0010)',p:'cinematic film look, anamorphic lens, shallow depth of field, rich contrast, film grain'},
+ 'Аниме':{bg:'linear-gradient(160deg,#ff5f8a,#3a0b5a)',p:'high quality anime style, cel shading, vibrant colors, dynamic composition'},
+ '3D-мульт':{bg:'linear-gradient(160deg,#ffb36b,#c3001c)',p:'stylized 3D animation, Pixar-like, soft global illumination, expressive characters'},
+ 'Документалка':{bg:'linear-gradient(160deg,#56635a,#111)',p:'documentary realism, natural light, handheld camera, authentic textures'},
+ 'Неон':{bg:'linear-gradient(160deg,#ff2d3d,#1a0033)',p:'neon cyberpunk aesthetic, wet reflective streets, red and magenta glow, night'},
+ 'Минимал':{bg:'linear-gradient(160deg,#ffffff,#9a9a9a)',p:'clean minimal aesthetic, soft studio light, negative space, muted palette'}
+};
+const VOICES=[
+ {id:'flow',t:'Звук из ГигаЧат',d:'ГигаЧат сам добавляет звук, если умеет, и музыку в клипе',i:'🎬'},
+ {id:'mine',t:'Мой голос',d:'Записываете озвучку прямо в приложении',i:'🎙️'},
+ {id:'tts',t:'ИИ-озвучка',d:'Бесплатный голос телефона читает текст',i:'🤖'},
+ {id:'none',t:'Без голоса',d:'Только музыка и субтитры',i:'🎵'}
+];
+const OR_URL='https://'+'openrouter.ai/api/v1/chat/completions';
+
+let S=load();
+let onb={step:0,d:{niche:'',lang:'Русский',format:'Shorts',freq:3,voice:'flow',style:'Кино',mode:'approve'}};
+const clips={};
+let pendingUpload=null;
+
+function load(){try{const x=JSON.parse(localStorage.getItem('cpilot')||'null');if(x)return x}catch(e){}return{channel:null,videos:[],ideas:[],view:'onb',paused:false,settings:{ai:'manual',key:'',model:''}}}
+function save(){localStorage.setItem('cpilot',JSON.stringify(S))}
+const $=s=>document.querySelector(s);
+const ESC={'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'};
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>ESC[c]);
+const attr=s=>esc(JSON.stringify(String(s==null?'':s)));
+const uid=()=>Math.random().toString(36).slice(2,9);
+function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('show');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),1900);if(navigator.vibrate)navigator.vibrate(12)}
+function copy(t){const ok=()=>toast('Скопировано ✓');const fb=()=>{const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy');ok()}catch(e){toast('Не удалось скопировать')}a.remove()};if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(t).then(ok,fb)}else fb()}
+function download(name,text){const b=new Blob([text],{type:'text/plain;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),3000)}
+const isEN=()=>S.channel&&S.channel.lang==='English';
+const ar=()=>S.channel&&S.channel.format==='Длинные'?'16:9':'9:16';
+
+function brandFor(d){const n=d.niche||'Факты';
+ if(d.lang==='English')return{names:[n+' in 60','The '+n+' Files',n+' Unfiltered'],desc:'Short, punchy videos about '+n+'. New episodes '+d.freq+'x a week. Visuals made with AI tools, ideas and scripts by a human.'};
+ return{names:[n+' за 60 секунд','Пилот: '+n,n+' • без воды'],desc:'Короткие и цепляющие видео про «'+n+'». Новые выпуски '+d.freq+' раз(а) в неделю. Визуал создан с помощью ИИ, идеи и сценарии — авторские.'}}
+function avatarPrompt(c){return 'Channel avatar logo for a YouTube channel about "'+c.niche+'". Bold minimal emblem, centered, high contrast, black background with red (#FF2D3D) and white accents, '+STYLES[c.style].p+'. Square 1:1, no text, crisp edges, readable at small size.'}
+function bannerPrompt(c){return 'YouTube channel banner 2560x1440, important content inside the centered safe area 1546x423. Theme: "'+c.niche+'". Dark cinematic background, red and white glowing accents, '+STYLES[c.style].p+'. Leave clean space in the center for the channel name "'+c.name+'". No small text.'}
+function ideasFor(c,k){k=k||6;const n=c.niche,l=n.toLowerCase();
+ const T=c.lang==='English'?['5 facts about '+n+' nobody tells you','What if '+l+' disappeared tomorrow?','The weirdest story in '+l,'I tested the biggest myth about '+l,n+': 3 mistakes everyone makes',n+' in 100 years','The darkest secret of '+l,n+' explained in 60 seconds']
+ :['5 фактов про «'+n+'», о которых молчат','Что будет, если «'+l+'» исчезнет завтра?','Самая странная история: '+l,'Проверил главный миф про «'+l+'»',n+': 3 ошибки, которые делают все','Как будет выглядеть «'+l+'» через 100 лет','Тёмная тайна темы «'+l+'»',n+' — объясняю за 60 секунд'];
+ return T.sort(()=>Math.random()-.5).slice(0,k).map(t=>({id:uid(),title:t,ctr:(5+Math.random()*7).toFixed(1),uniq:Math.round(60+Math.random()*38),diff:['Легко','Средне','Сложно'][Math.floor(Math.random()*3)]}))}
+function demoScenes(v,c){const n=c.format==='Длинные'?10:6;const out=[];
+ const parts=['Хук: шокирующий кадр, который останавливает скролл','Контекст: в чём вопрос','Первый поворот','Главный факт','Неожиданная деталь','Финал + призыв подписаться','Дополнение 1','Дополнение 2','Дополнение 3','Итог'];
+ const cams=['slow pan','orbit shot','handheld tracking','top-down','static wide'];
+ for(let i=0;i<n;i++){const last=i===n-1;out.push({text:last?'Финал + призыв подписаться':parts[i],voiceover:i===0?'Ты точно не знал этого про «'+c.niche.toLowerCase()+'»…':last?'Подпишись, чтобы не пропустить следующий выпуск!':'Часть '+(i+1)+': '+v.title,subject:i===0?'Dramatic close-up visual metaphor for "'+v.title+'"':'Scene '+(i+1)+' illustrating "'+v.title+'"',action:i===0?'sudden reveal, fast push-in':'slow meaningful movement, clear visual storytelling',setting:'the world of '+c.niche,camera:i===0?'fast dolly-in, low angle':cams[i%5],lighting:'dramatic contrast, red rim light',audio:c.voice==='flow'?'narrator voice reads the line, subtle ambient sound':'ambient sound only, no speech',negative:'text, subtitles, watermark, logos, distorted faces, extra fingers, low quality'})}
+ return out}
+function flowPrompt(sc,c){return sc.subject+'. '+sc.action+'.'+NL+'Setting: '+sc.setting+'.'+NL+'Camera: '+sc.camera+'.'+NL+'Lighting: '+sc.lighting+'.'+NL+'Style: '+STYLES[c.style].p+'.'+NL+'Audio: '+sc.audio+(c.voice==='flow'&&sc.voiceover?' Line: "'+sc.voiceover+'"':'')+'.'+NL+'Format: '+ar()+', 8 seconds, 1080p.'+NL+'Negative: '+sc.negative+'.'}
+function claudePrompt(v,c){const n=c.format==='Длинные'?10:6;const voice=VOICES.find(x=>x.id===c.voice).t;
+ return ['Ты — сценарист YouTube-канала. Ниша: «'+c.niche+'». Язык видео: '+c.lang+'. Формат: '+(c.format==='Длинные'?'длинное видео 16:9':'Shorts 9:16 до 60 секунд')+'. Озвучка: '+voice+'. Визуальный стиль: '+c.style+'.',
+ 'Тема видео: «'+v.title+'».','',
+ 'Сделай сценарий из '+n+' сцен по 8 секунд: сильный хук в первые 3 секунды → удержание → петли интереса → призыв подписаться.',
+ 'Для каждой сцены дай поля для генерации видео в GigaChat video (Kandinsky) НА АНГЛИЙСКОМ: subject, action, setting, camera, lighting, audio, negative. Текст озвучки voiceover — на языке видео, не длиннее 8 секунд речи.',
+ 'Также дай 3 варианта заголовка, описание с таймкодами, 10 тегов и промпт обложки thumbnail_prompt (на английском, 16:9, яркий, один крупный объект, без текста).','',
+ 'Ответь ТОЛЬКО валидным JSON без пояснений, строго в формате:',
+ '{"scenes":[{"text":"что происходит","voiceover":"","subject":"","action":"","setting":"","camera":"","lighting":"","audio":"","negative":""}],"titles":["","",""],"description":"","tags":[""],"thumbnail_prompt":""}'].join(NL)}
+function parseAI(txt){const a=txt.indexOf('{'),b=txt.lastIndexOf('}');if(a<0||b<0)throw new Error('JSON не найден');const j=JSON.parse(txt.slice(a,b+1));if(!Array.isArray(j.scenes)||!j.scenes.length)throw new Error('нет сцен');
+ j.scenes=j.scenes.map(s=>({text:s.text||'',voiceover:s.voiceover||'',subject:s.subject||'',action:s.action||'',setting:s.setting||'',camera:s.camera||'',lighting:s.lighting||'',audio:s.audio||'',negative:s.negative||'text, watermark, logos, distorted faces'}));return j}
+function applyScript(v,j){v.scenes=j.scenes.map(s=>Object.assign({},s,{clip:null}));v.titles=(j.titles&&j.titles.length?j.titles:[v.title]).slice(0,3);v.titleSel=0;v.description=j.description||'';v.tags=j.tags||[];v.thumb=j.thumbnail_prompt||'';v.stage=Math.max(v.stage,2)}
+function demoPackage(v,c){const en=isEN();return{scenes:demoScenes(v,c),titles:[v.title,v.title+' 😱',(en?'The truth about ':'Правда про ')+c.niche.toLowerCase()],
+ description:[(en?'In this video: ':'В этом видео: ')+v.title,'','0:00 '+(en?'Hook':'Хук'),'0:08 '+(en?'Story':'История'),'0:40 '+(en?'Ending':'Финал'),'','#shorts'].join(NL),
+ tags:[c.niche,'shorts',en?'facts':'факты',en?'interesting':'интересно',en?'top':'топ'],thumbnail_prompt:'YouTube thumbnail 16:9 for "'+v.title+'", one huge expressive subject, red and black palette, white glow outline, '+STYLES[c.style].p+', no text'}}
+function srt(v){const p=n=>String(n).padStart(2,'0');const f=t=>p(Math.floor(t/3600))+':'+p(Math.floor(t%3600/60))+':'+p(t%60)+',000';return v.scenes.map((s,i)=>(i+1)+NL+f(i*8)+' --> '+f(i*8+8)+NL+s.voiceover+NL).join(NL)}
+function capcutPlan(v){return ['ПЛАН МОНТАЖА — '+v.titles[v.titleSel||0],'Формат: '+ar(),''].join(NL)+v.scenes.map((s,i)=>String(i+1).padStart(2,'0')+'. '+(s.clip||'(нет клипа)')+'  |  '+(i*8)+'–'+(i*8+8)+' c'+NL+'    Озвучка: '+s.voiceover+NL+'    Сцена: '+s.text).join(NL+NL)+NL+NL+'Импорт: CapCut → Новый проект → добавьте клипы по номерам → Текст → Импорт субтитров → subtitles.srt'}
+function defaultSlot(){const d=new Date();d.setDate(d.getDate()+1);const p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'T18:00'}
+/* AutoYouTube · экраны */
+function go(view){S.view=view;save();render();window.scrollTo({top:0,behavior:'smooth'})}
+function render(){if(!S.channel)S.view='onb';$('#tabbar').style.display=S.view==='onb'?'none':'flex';
+ const map={onb:vOnb,studio:vStudio,ideas:vIdeas,video:vVideo,calendar:vCalendar,analytics:vAnalytics,more:vMore,brand:vBrand,settings:vSettings};
+ $('#app').innerHTML=(map[S.view]||vStudio)();renderTabs();if(S.view==='ideas')bindSwipe()}
+function renderTabs(){const t=[['studio','🎛️','Студия'],['ideas','💡','Идеи'],['calendar','🗓️','Календарь'],['analytics','📈','Аналитика'],['more','⚙️','Ещё']];
+ const cur=S.view==='video'?'studio':(['brand','settings'].includes(S.view)?'more':S.view);
+ $('#tabbar').innerHTML=t.map(([id,i,l])=>`<div class="tab ${cur===id?'on':''}" onclick="go('${id}')"><span class="i">${i}</span>${l}</div>`).join('')}
+function header(sub){return `<div class="top"><div class="logo"><b>▶</b>AutoYouTube</div>${sub||''}</div>`}
+
+/* ---------- Создание канала ---------- */
+const ONB_N=8;
+function vOnb(){const d=onb.d,st=onb.step,pct=Math.round(st/(ONB_N-1)*100);let body='';
+ if(st===0)body=`<div style="margin-top:40px"></div><div class="glass card" style="padding:26px"><div class="logo" style="margin-bottom:18px"><b>▶</b>AutoYouTube</div><h1>Ваш ИИ-продюсер<br><span class="red">YouTube-канала</span></h1><p>Идеи, сценарии и промпты для ГигаЧат. Вы генерируете клипы — приложение монтирует, оформляет и публикует.</p><div class="hr"></div><div class="col"><div class="row">💡<span>Идеи и сценарии</span></div><div class="row">🎬<span>Готовые промпты для ГигаЧат</span></div><div class="row">✂️<span>Автомонтаж + экспорт для CapCut</span></div><div class="row">🚀<span>Публикация по расписанию</span></div></div></div><button class="btn primary block" onclick="onbNext()">Создать канал</button>`;
+ if(st===1)body=`<h1>Ниша канала</h1><p>О чём будут видео? Выберите или впишите свою.</p><div class="row wrap">${NICHES.map(n=>`<div class="chip ${d.niche===n?'on':''}" onclick="onbSet('niche',${attr(n)})">${n}</div>`).join('')}</div><h2>Своя ниша</h2><input placeholder="Например: история Древнего Рима" value="${NICHES.includes(d.niche)?'':esc(d.niche)}" oninput="onb.d.niche=this.value">`;
+ if(st===2)body=`<h1>Язык видео</h1><p>Озвучка, заголовки и описания будут на этом языке.</p><div class="row wrap">${LANGS.map(n=>`<div class="chip ${d.lang===n?'on':''}" onclick="onbSet('lang',${attr(n)})">${n}</div>`).join('')}</div>`;
+ if(st===3)body=`<h1>Формат</h1>${[['Shorts','📱','Вертикальные 9:16, до 60 секунд'],['Длинные','🖥️','Горизонтальные 16:9, 3–10 минут'],['Оба','🔀','Shorts + длинные видео']].map(([k,i,t])=>`<div class="opt ${d.format===k?'on':''}" onclick="onbSet('format',${attr(k)})"><h3>${i} ${k}</h3><p style="margin:0">${t}</p></div>`).join('')}<h2>Видео в неделю</h2><div class="row wrap">${[1,2,3,5,7].map(n=>`<div class="chip ${d.freq===n?'on':''}" onclick="onbSet('freq',${n})">${n}</div>`).join('')}</div>`;
+ if(st===4)body=`<h1>Голос</h1><p>Как будет звучать видео.</p>${VOICES.map(x=>`<div class="opt ${d.voice===x.id?'on':''}" onclick="onbSet('voice','${x.id}')"><h3>${x.i} ${x.t}</h3><p style="margin:0">${x.d}</p></div>`).join('')}`;
+ if(st===5)body=`<h1>Визуальный стиль</h1><p>Он попадёт в каждый промпт для ГигаЧат.</p><div class="style-grid">${Object.keys(STYLES).map(k=>`<div class="style ${d.style===k?'on':''}" style="background:${STYLES[k].bg};color:${k==='Минимал'?'#000':'#fff'}" onclick="onbSet('style',${attr(k)})">${k}</div>`).join('')}</div>`;
+ if(st===6)body=`<h1>Режим работы</h1><div class="opt ${d.mode==='approve'?'on':''}" onclick="onbSet('mode','approve')"><h3>✅ Утверждение <span class="pill white" style="margin-left:auto">Рекомендуем</span></h3><p style="margin:0">Вы смотрите и одобряете каждое видео перед публикацией.</p></div><div class="opt ${d.mode==='auto'?'on':''}" onclick="onbSet('mode','auto')"><h3>🚀 Автопилот</h3><p style="margin:0">Готовое видео публикуется само, не больше ${d.freq} в неделю. Остановить — в 1 тап.</p></div>`;
+ if(st===7){if(!d.names){const b=brandFor(d);d.names=b.names;d.desc=b.desc;d.name=b.names[0]}
+  body=`<h1>Оформление канала</h1><p>Выберите название. Промпты аватарки и шапки будут в разделе «Канал».</p>${d.names.map(n=>`<div class="opt ${d.name===n?'on':''}" onclick="onbSet('name',${attr(n)})"><h3>${esc(n)}</h3></div>`).join('')}<input placeholder="Или своё название" oninput="onb.d.name=this.value"><h2>Описание</h2><textarea oninput="onb.d.desc=this.value">${esc(d.desc)}</textarea>`}
+ const nav=st===0?'':`<div class="row" style="margin-top:20px"><button class="btn ghost" onclick="onb.step--;render()">←</button><button class="btn ${st===ONB_N-1?'white':'primary'}" style="flex:1" onclick="onbNext()">${st===ONB_N-1?'Готово — открыть студию':'Далее'}</button></div>`;
+ return (st?`<div class="row between"><span class="muted">Шаг ${st} из ${ONB_N-1}</span>${S.channel?`<span class="back" onclick="go('studio')">Отмена</span>`:''}</div><div class="progress"><i style="width:${pct}%"></i></div>`:'')+`<div style="animation:pop .45s var(--spring)">${body}</div>`+nav}
+function onbSet(k,v){onb.d[k]=v;if(navigator.vibrate)navigator.vibrate(8);render()}
+function onbNext(){const d=onb.d;if(onb.step===1&&!String(d.niche).trim())return toast('Выберите нишу');
+ if(onb.step<ONB_N-1){onb.step++;render();return}
+ const keep=S.channel;S.channel={niche:d.niche.trim(),lang:d.lang,format:d.format,freq:d.freq,voice:d.voice,style:d.style,mode:d.mode,name:d.name||d.names[0],desc:d.desc};
+ if(!keep||keep.niche!==S.channel.niche)S.ideas=ideasFor(S.channel);save();toast(keep?'Канал обновлён':'Канал создан 🎉');go('studio')}
+function editChannel(){onb={step:1,d:Object.assign({},S.channel,{names:null})};go('onb')}
+
+/* ---------- Студия ---------- */
+const STAGE_IC=['💡','📝','🎬','✂️','👀','🗓️','✅'];
+function vStudio(){const c=S.channel;const counts=STAGES.map((_,i)=>S.videos.filter(v=>v.stage===i).length);const list=S.videos.slice().sort((a,b)=>b.created-a.created);
+ return header(`<button class="btn sm stop" onclick="stopAll()">${S.paused?'▶ Возобновить':'⏹ Стоп всё'}</button>`)+
+ (S.paused?'<div class="banner">⏸ Автопилот и публикации остановлены</div>':'')+
+ `<h1>${esc(c.name)}</h1><p>${esc(c.niche)} · ${esc(c.lang)} · ${esc(c.format)} · ${c.freq}/нед · ${c.mode==='auto'?'🚀 Автопилот':'✅ Утверждение'}</p>
+ <div class="stage-scroll">${STAGES.map((s,i)=>`<span class="pill ${counts[i]?'red':''}">${s} · ${counts[i]}</span>`).join('')}</div>
+ <div class="row" style="margin:14px 0"><button class="btn primary" style="flex:1" onclick="go('ideas')">💡 Новые идеи</button><button class="btn white" onclick="go('brand')">🎨 Канал</button></div><h2>Конвейер</h2>`+
+ (list.length?list.map(v=>{const up=v.scenes?v.scenes.filter(s=>s.clip).length:0,tot=v.scenes?v.scenes.length:0;
+  return `<div class="glass card vcard" onclick="openVideo('${v.id}')"><div class="thumb">${STAGE_IC[v.stage]}</div><div style="flex:1;min-width:0"><div class="row between"><span class="pill ${v.stage>=4?'white':'red'}">${STAGES[v.stage]}</span><span class="muted">${tot?up+'/'+tot+' клипов':''}</span></div><h3 style="margin-top:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(vTitle(v))}</h3><div class="bar"><i style="width:${Math.round(v.stage/6*100)}%"></i></div></div></div>`}).join('')
+ :`<div class="glass card empty"><div class="ill">🎬</div><h3>Конвейер пуст</h3><p>Выберите идеи свайпом — они появятся здесь.</p><button class="btn primary" onclick="go('ideas')">Выбрать идеи</button></div>`)}
+function vTitle(v){return v.titles?v.titles[v.titleSel||0]:v.title}
+function stopAll(){S.paused=!S.paused;save();toast(S.paused?'Всё остановлено':'Работа возобновлена');render()}
+
+/* ---------- Идеи ---------- */
+function vIdeas(){const top=S.ideas.slice(0,3).reverse();
+ return header()+`<h1>Идеи</h1><p>Свайп вправо — в работу, влево — пропустить.</p>`+
+ (top.length?`<div class="swipe">${top.map((x,i)=>{const off=top.length-1-i;return `<div class="glass scard" ${off===0?'id="topcard"':''} style="transform:translateY(${off*12}px) scale(${1-off*.04});opacity:${1-off*.25};z-index:${i}"><div><span class="pill red">Идея</span><div class="big" style="margin-top:16px">${esc(x.title)}</div></div><div class="metric"><div><b>${x.ctr}%</b><small>Прогноз CTR</small></div><div><b>${x.uniq}%</b><small>Уникальность</small></div><div><b>${x.diff}</b><small>Сложность</small></div></div></div>`}).join('')}</div>
+  <div class="row" style="justify-content:center;gap:22px"><button class="btn ghost round" onclick="swipe(false)">✕</button><button class="btn primary round" onclick="swipe(true)">✓</button></div>`
+  :`<div class="glass card empty"><div class="ill">💡</div><h3>Идеи закончились</h3><p>Сгенерируем ещё под вашу нишу.</p></div>`)+
+ `<button class="btn white block" style="margin-top:18px" onclick="S.ideas=S.ideas.concat(ideasFor(S.channel));save();render()">✨ Сгенерировать ещё</button>`}
+function swipe(yes){const el=$('#topcard');const it=S.ideas.shift();if(el){el.style.transform=`translateX(${yes?420:-420}px) rotate(${yes?18:-18}deg)`;el.style.opacity=0}
+ if(yes&&it){S.videos.push({id:uid(),title:it.title,stage:1,created:Date.now(),scenes:null,tab:'script'});toast('В работу ✓')}
+ save();setTimeout(render,260)}
+function bindSwipe(){const el=$('#topcard');if(!el)return;let x0=null,dx=0;
+ el.addEventListener('pointerdown',e=>{x0=e.clientX;dx=0;el.style.transition='none';el.setPointerCapture(e.pointerId)});
+ el.addEventListener('pointermove',e=>{if(x0===null)return;dx=e.clientX-x0;el.style.transform=`translateX(${dx}px) rotate(${dx/18}deg)`});
+ el.addEventListener('pointerup',()=>{el.style.transition='';if(Math.abs(dx)>90)swipe(dx>0);else el.style.transform='';x0=null})}
+
+/* ---------- Видео-проект ---------- */
+function cur(){return S.videos.find(v=>v.id===S.vid)}
+function openVideo(id){const v=S.videos.find(x=>x.id===id);S.vid=id;v.tab=v.tab||(v.scenes?'scenes':'script');go('video')}
+function setTab(t){cur().tab=t;save();render();window.scrollTo({top:0})}
+function emptyNeed(){return `<div class="glass card empty"><div class="ill">📝</div><h3>Сначала сценарий</h3><p>Этот шаг откроется после сценария.</p><button class="btn primary" onclick="setTab('script')">К сценарию</button></div>`}
+function vVideo(){const v=cur();if(!v){S.view='studio';return vStudio()}const c=S.channel;let body='';
+ const tabs=[['script','Сценарий'],['scenes','Сцены'],['edit','Монтаж'],['publish','Публикация']];
+ if(v.tab==='script')body=tabScript(v,c);
+ else if(!v.scenes)body=emptyNeed();
+ else if(v.tab==='scenes')body=tabScenes(v,c);
+ else if(v.tab==='edit')body=tabEdit(v,c);
+ else body=tabPublish(v,c);
+ return `<span class="back" onclick="go('studio')">← Студия</span><span class="pill red" style="float:right">${STAGES[v.stage]}</span><h1 style="font-size:26px">${esc(vTitle(v))}</h1><div class="subtabs glass">${tabs.map(([k,l])=>`<div class="${v.tab===k?'on':''}" onclick="setTab('${k}')">${l}</div>`).join('')}</div>`+body}
+function tabScript(v,c){const manual=S.settings.ai!=='auto';
+ return `<div class="glass card"><h3>${manual?'🧠 Claude вручную':'⚡ Бесплатная модель OpenRouter'}</h3>`+
+ (manual?`<p>1. Скопируйте запрос → 2. вставьте в бесплатный <b>claude.ai</b> → 3. скопируйте ответ и вставьте ниже.</p><button class="btn white block" onclick="copy(claudePrompt(cur(),S.channel))">📋 Скопировать запрос для Claude</button><textarea id="aiIn" style="margin-top:12px" placeholder="Вставьте сюда ответ Claude"></textarea><button class="btn primary block" style="margin-top:10px" onclick="importAI()">Разобрать ответ</button>`
+ :`<p>Модель напишет сценарий сама. Нужен бесплатный ключ в Настройках.</p><button class="btn primary block" onclick="autoAI()">✨ Написать сценарий</button>`)+
+ `<div class="hr"></div><button class="btn ghost block" onclick="demoScript()">Попробовать на демо-сценарии</button></div>`+
+ (v.scenes?`<h2>Сценарий · ${v.scenes.length} сцен</h2>`+v.scenes.map((s,i)=>`<div class="glass card"><span class="pill red">Сцена ${i+1} · ${i*8}–${i*8+8} c</span><p style="margin-top:10px;color:#fff"><b>${esc(s.text)}</b></p><p style="margin:0">🎙️ ${esc(s.voiceover)}</p></div>`).join(''):'')}
+function demoScript(){applyScript(cur(),demoPackage(cur(),S.channel));cur().tab='scenes';save();render();toast('Демо-сценарий готов')}
+function tabScenes(v,c){const up=v.scenes.filter(s=>s.clip).length;
+ return `<div class="glass-white card"><div class="row between"><div><h3>Промпты для ГигаЧат</h3><p style="margin:0">${up} из ${v.scenes.length} клипов загружено</p></div><button class="btn sm primary" onclick="copyAll()">Копировать всё</button></div><div class="bar" style="background:rgba(0,0,0,.1)"><i style="width:${up/v.scenes.length*100}%"></i></div></div>`+
+ v.scenes.map((s,i)=>{const p=flowPrompt(s,c);const url=clips[v.id+'_'+i];
+  return `<div class="glass card"><div class="row between"><span class="pill ${s.clip?'white':'red'}">${s.clip?'✓ ':''}Сцена ${i+1}</span><span class="muted">${ar()} · 8 сек</span></div><p style="margin-top:10px;color:#fff"><b>${esc(s.text)}</b></p><div class="kv"><span>Камера</span><span>${esc(s.camera)}</span><span>Свет</span><span>${esc(s.lighting)}</span><span>Звук</span><span>${esc(s.audio)}</span></div><pre class="prompt">${esc(p)}</pre>`+
+  (url?`<video src="${url}" controls playsinline style="width:100%;border-radius:14px;margin-bottom:10px;max-height:260px;background:#000"></video>`:s.clip?`<p class="muted">📎 ${esc(s.clip)} — после перезапуска загрузите снова</p>`:'')+
+  `<div class="row"><button class="btn white sm" style="flex:1" onclick="copyScene(${i})">📋 Копировать</button><button class="btn ${s.clip?'ghost':'primary'} sm" style="flex:1" onclick="pickClip(${i})">${s.clip?'↻ Заменить':'⬆ Загрузить клип'}</button></div></div>`}).join('')}
+function copyScene(i){copy(flowPrompt(cur().scenes[i],S.channel))}
+function copyAll(){copy(cur().scenes.map((s,i)=>'### SCENE '+(i+1)+NL+flowPrompt(s,S.channel)).join(NL+NL))}
+function tabEdit(v,c){const miss=v.scenes.filter(s=>!s.clip).length;
+ return (miss?`<div class="banner">Не хватает клипов: ${miss}. Загрузите их во вкладке «Сцены».</div>`:'')+
+ `<div class="player ${ar()==='16:9'?'wide':''}"><video id="pv" playsinline></video><div class="subs" id="subs"></div></div>
+ <div class="glass card"><h3>✂️ Автомонтаж</h3><p>Склейка по сценам, субтитры из озвучки, музыка, громкость, кадр ${ar()}.</p><label class="check"><input type="checkbox" checked><span>Анимированные субтитры</span></label><label class="check"><input type="checkbox" checked><span>Фоновая музыка без авторских прав</span></label><label class="check"><input type="checkbox"><span>Интро/аутро канала</span></label><button class="btn primary block" ${miss?'disabled':''} onclick="montage()">${v.stage>=4?'▶ Смотреть монтаж':'✨ Смонтировать'}</button><p class="muted" style="margin:10px 0 0">В прототипе — предпросмотр. В Android-версии — готовый MP4.</p></div>
+ <div class="glass card"><h3>Экспорт для CapCut</h3><p>Субтитры и план: порядок клипов, тайминги, текст.</p><div class="row"><button class="btn white sm" style="flex:1" onclick="download('subtitles.srt',srt(cur()))">⬇ Субтитры .srt</button><button class="btn ghost sm" style="flex:1" onclick="download('capcut-plan.txt',capcutPlan(cur()))">⬇ План монтажа</button></div></div>`}
+const CHECKS=[['copy','Нет чужой музыки и чужих видео'],['faces','Нет реалистичных лиц реальных людей'],['claims','Нет медицинских и финансовых обещаний'],['ai','Раскрытие ИИ-контента включено'],['kids','Аудитория «для детей» указана верно']];
+function tabPublish(v,c){v.checks=v.checks||{};const okAll=CHECKS.every(([k])=>v.checks[k]);
+ const hint=S.paused?'Сейчас всё остановлено':v.stage<4?'Сначала смонтируйте видео':okAll?'':'Отметьте все пункты чек-листа';
+ return `<div class="glass card"><h3>Заголовок</h3>${v.titles.map((t,i)=>`<div class="opt ${(v.titleSel||0)===i?'on':''}" style="padding:12px" onclick="cur().titleSel=${i};save();render()">${esc(t)}</div>`).join('')}<h3 style="margin-top:12px">Описание</h3><textarea oninput="cur().description=this.value;save()">${esc(v.description)}</textarea><h3 style="margin-top:12px">Теги</h3><div class="row wrap">${(v.tags||[]).map(t=>`<span class="pill">#${esc(t)}</span>`).join('')}</div></div>
+ <div class="glass card"><h3>🖼️ Обложка</h3><p>Сгенерируйте в ГигаЧат и загрузите сюда.</p><pre class="prompt">${esc(v.thumb)}</pre><div class="row"><button class="btn white sm" style="flex:1" onclick="copy(cur().thumb||'')">📋 Промпт</button><button class="btn ghost sm" style="flex:1" onclick="pickThumb()">${v.thumbFile?'✓ '+esc(v.thumbFile):'⬆ Загрузить'}</button></div></div>
+ <div class="glass card"><h3>🛡️ Чек-лист перед публикацией</h3>${CHECKS.map(([k,t])=>`<label class="check"><input type="checkbox" ${v.checks[k]?'checked':''} onchange="cur().checks['${k}']=this.checked;save();render()"><span>${t}</span></label>`).join('')}<div class="hr"></div><div class="row between"><span>Флаг «ИИ-контент» на YouTube</span><div class="switch ${v.ai!==false?'on':''}" onclick="cur().ai=cur().ai===false;save();render()"></div></div></div>
+ <div class="glass card"><h3>🗓️ Дата публикации</h3><input type="datetime-local" id="pubAt" value="${v.publishAt||defaultSlot()}"><p class="muted" style="margin-top:8px">Публикует сам YouTube по таймеру — телефон можно выключить.</p></div>`+
+ (v.stage>=5?`<div class="glass-white card"><h3>✅ Запланировано</h3><p style="margin:0">${esc(String(v.publishAt).replace('T',' '))}</p></div><button class="btn ghost block" onclick="cur().stage=4;save();render()">Отменить публикацию</button>`
+ :`<div class="row"><button class="btn ghost" onclick="rejectVideo()">Отклонить</button><button class="btn primary" style="flex:1" ${okAll&&v.stage>=4&&!S.paused?'':'disabled'} onclick="approve()">Утвердить и запланировать</button></div><p class="muted" style="margin-top:8px;text-align:center">${hint}</p>`)}
+function importAI(){try{applyScript(cur(),parseAI($('#aiIn').value));cur().tab='scenes';save();render();toast('Сценарий загружен ✓')}catch(e){toast('Ошибка: '+e.message)}}
+async function autoAI(){const k=S.settings.key;if(!k)return toast('Добавьте ключ в Настройках');toast('Пишу сценарий…');
+ try{const r=await fetch(OR_URL,{method:'POST',headers:{'Authorization':'Bearer '+k,'Content-Type':'application/json'},body:JSON.stringify({model:S.settings.model||'openrouter/free',messages:[{role:'user',content:claudePrompt(cur(),S.channel)}]})});
+  const j=await r.json();const txt=j.choices&&j.choices[0]&&j.choices[0].message&&j.choices[0].message.content;if(!txt)throw new Error((j.error&&j.error.message)||'пустой ответ');
+  applyScript(cur(),parseAI(txt));cur().tab='scenes';save();render();toast('Сценарий готов ✓')}catch(e){toast('Ошибка: '+e.message)}}
+function pickClip(i){pendingUpload={type:'clip',i};const f=$('#filepick');f.accept='video/*';f.value='';f.click()}
+function pickThumb(){pendingUpload={type:'thumb'};const f=$('#filepick');f.accept='image/*';f.value='';f.click()}
+function onFile(e){const file=e.target.files[0];if(!file||!pendingUpload)return;const v=cur();
+ if(pendingUpload.type==='clip'){const i=pendingUpload.i;clips[v.id+'_'+i]=URL.createObjectURL(file);v.scenes[i].clip=file.name;if(v.scenes.every(s=>s.clip))v.stage=Math.max(v.stage,3);toast('Клип сцены '+(i+1)+' загружен')}
+ else{v.thumbFile=file.name;toast('Обложка загружена')}save();render()}
+function montage(){const v=cur();const urls=v.scenes.map((_,i)=>clips[v.id+'_'+i]);if(urls.some(u=>!u))return toast('Загрузите клипы заново');
+ v.stage=Math.max(v.stage,4);save();const pv=$('#pv'),sb=$('#subs');let i=0;
+ const play=()=>{if(i>=urls.length){sb.innerHTML='';toast('Монтаж готов ✓');render();return}pv.src=urls[i];sb.innerHTML='<span>'+esc(v.scenes[i].voiceover)+'</span>';pv.play().catch(()=>{});i++};
+ pv.onended=play;play()}
+function approve(){const v=cur();v.publishAt=$('#pubAt').value||defaultSlot();v.stage=5;save();toast('Запланировано 🚀');render()}
+function rejectVideo(){if(!confirm('Отклонить и удалить это видео?'))return;S.videos=S.videos.filter(x=>x.id!==S.vid);save();go('studio')}
+
+/* ---------- Календарь ---------- */
+function vCalendar(){const now=new Date();now.setHours(0,0,0,0);const start=new Date(now);start.setDate(now.getDate()-((now.getDay()+6)%7));const days=[];
+ for(let i=0;i<28;i++){const d=new Date(start);d.setDate(start.getDate()+i);days.push(d)}
+ const p=n=>String(n).padStart(2,'0');const lk=d=>d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());
+ const sch=S.videos.filter(v=>v.publishAt&&v.stage>=5).sort((a,b)=>a.publishAt.localeCompare(b.publishAt));const has=new Set(sch.map(v=>v.publishAt.slice(0,10)));
+ return header()+`<h1>Календарь</h1><p>План: ${S.channel.freq} видео в неделю.</p><div class="glass card"><div class="cal">${['Пн','Вт','Ср','Чт','Пт','Сб','Вс'].map(x=>`<div class="muted" style="text-align:center">${x}</div>`).join('')}${days.map(d=>`<div class="day ${has.has(lk(d))?'has':''} ${+d===+now?'today':''}">${d.getDate()}<small>${has.has(lk(d))?'●':''}</small></div>`).join('')}</div></div><h2>Запланировано</h2>`+
+ (sch.length?sch.map(v=>`<div class="glass card vcard" onclick="openVideo('${v.id}')"><div class="thumb">🗓️</div><div><h3>${esc(vTitle(v))}</h3><p class="muted" style="margin:0">${esc(v.publishAt.replace('T',' · '))}</p></div></div>`).join('')
+ :`<div class="glass card empty"><div class="ill">🗓️</div><h3>Пока пусто</h3><p>Утвердите видео — оно появится здесь.</p></div>`)}
+
+/* ---------- Аналитика (демо) ---------- */
+function vAnalytics(){const d=[32,48,41,77,64,90,58];
+ return header()+`<h1>Аналитика</h1><p>Демо-данные. После подключения YouTube здесь будут реальные цифры.</p>
+ <div class="metric" style="margin-bottom:12px"><div class="glass"><b>12.4K</b><small>Просмотры · 7 дн</small></div><div class="glass"><b>8.1%</b><small>CTR</small></div><div class="glass"><b>+214</b><small>Подписчики</small></div></div>
+ <div class="glass card"><h3>Просмотры по дням</h3><div class="chart">${d.map(x=>`<div style="height:${x}%"></div>`).join('')}</div><div class="row between muted"><span>Пн</span><span>Вс</span></div></div>
+ <div class="glass-white card"><h3>💡 Что сработало</h3><p style="margin:0">Видео с вопросом в заголовке набирают на 34% больше просмотров. Следующие идеи чаще будут в формате «Что будет, если…».</p></div>
+ <div class="glass card"><h3>📉 Что улучшить</h3><p style="margin:0">Зрители уходят на 4-й секунде — сделаем хук короче и динамичнее.</p></div>`}
+
+/* ---------- Ещё / Канал / Настройки ---------- */
+function vMore(){const items=[["go('brand')",'🎨','Оформление канала','Название, описание, аватарка, шапка'],["go('settings')",'⚙️','Настройки','ИИ, ключи, данные'],['editChannel()','✏️','Параметры канала','Ниша, стиль, качество, длительность, голос']];
+ return header()+`<h1>Ещё</h1>`+items.map(([a,i,t,d])=>`<div class="glass card vcard" onclick="${a}"><div class="thumb" style="height:58px">${i}</div><div><h3>${t}</h3><p class="muted" style="margin:0">${d}</p></div></div>`).join('')+
+ `<div class="glass card"><h3>Подключения</h3><div class="row between" style="margin-top:8px"><span>▶️ YouTube</span><span class="pill">В Android-версии</span></div><div class="row between" style="margin-top:10px"><span>🎬 ГигаЧат</span><span class="pill white">Вручную</span></div></div>`}
+function vBrand(){const c=S.channel;
+ return `<span class="back" onclick="go('more')">← Ещё</span><h1>Оформление</h1>
+ <div class="glass card"><h3>Название</h3><input value="${esc(c.name)}" oninput="S.channel.name=this.value;save()"><p class="muted" style="margin-top:8px">Название и аватарку YouTube разрешает менять только вручную: YouTube → Настроить канал.</p><button class="btn white sm" onclick="copy(S.channel.name)">📋 Копировать</button></div>
+ <div class="glass card"><h3>Описание канала</h3><textarea oninput="S.channel.desc=this.value;save()">${esc(c.desc)}</textarea><div class="row" style="margin-top:10px"><button class="btn white sm" style="flex:1" onclick="copy(S.channel.desc)">📋 Копировать</button><button class="btn ghost sm" style="flex:1" onclick="S.channel.desc=brandFor(S.channel).desc;save();render()">↻ Заново</button></div></div>
+ <div class="glass card"><h3>🟥 Аватарка</h3><pre class="prompt">${esc(avatarPrompt(c))}</pre><button class="btn white sm block" onclick="copy(avatarPrompt(S.channel))">📋 Промпт для ГигаЧат</button></div>
+ <div class="glass card"><h3>🖼️ Шапка канала</h3><pre class="prompt">${esc(bannerPrompt(c))}</pre><button class="btn white sm block" onclick="copy(bannerPrompt(S.channel))">📋 Промпт для ГигаЧат</button></div>`}
+function vSettings(){const s=S.settings;
+ return `<span class="back" onclick="go('more')">← Ещё</span><h1>Настройки</h1>
+ <div class="glass card"><h3>ИИ для сценариев</h3><div class="opt ${s.ai!=='auto'?'on':''}" onclick="S.settings.ai='manual';save();render()"><h3>🧠 Claude вручную</h3><p style="margin:0">Бесплатно и без ключей: копировать → claude.ai → вставить ответ.</p></div><div class="opt ${s.ai==='auto'?'on':''}" onclick="S.settings.ai='auto';save();render()"><h3>⚡ OpenRouter (free)</h3><p style="margin:0">Автоматически, нужен бесплатный ключ.</p></div>`+
+ (s.ai==='auto'?`<input type="password" placeholder="Ключ OpenRouter sk-or-..." value="${esc(s.key)}" oninput="S.settings.key=this.value;save()"><input style="margin-top:8px" placeholder="Модель (по умолчанию openrouter/free)" value="${esc(s.model||'')}" oninput="S.settings.model=this.value;save()"><p class="muted" style="margin-top:8px">Ключ хранится только на этом устройстве.</p>`:'')+`</div>
+ <div class="glass card"><h3>Данные</h3><p>Всё хранится на устройстве, сервера нет.</p><button class="btn ghost block" onclick="download('channel-pilot-backup.json',JSON.stringify(S,null,2))">⬇ Экспорт данных</button><button class="btn block stop" style="margin-top:10px" onclick="resetAll()">Удалить всё</button></div>`}
+function resetAll(){if(confirm('Удалить канал и все данные?')){localStorage.removeItem('cpilot');location.reload()}}
+
+document.getElementById('filepick').addEventListener('change',onFile);
+/* AutoYouTube v2 · английский контент + русский перевод, свои ниша/стиль, ползунки */
+const NICHE_EN={'Факты и наука':'Facts & Science','Истории и мистика':'Mystery Stories','Технологии и ИИ':'Tech & AI','Игры':'Gaming','Мотивация':'Motivation','Юмор':'Comedy','Животные':'Animals','Космос':'Space','Финансы':'Money & Finance','Еда':'Food'};
+const STYLE_RU={'Кино':'кинематографичная картинка, анаморфный объектив, размытый фон, сочный контраст, плёночное зерно','Аниме':'качественное аниме, цел-шейдинг, яркие цвета, динамичная композиция','3D-мульт':'стилизованная 3D-анимация как у Pixar, мягкий свет, выразительные персонажи','Документалка':'документальный реализм, естественный свет, ручная камера, настоящие текстуры','Неон':'неоновый киберпанк, мокрые улицы с отражениями, красное и пурпурное свечение, ночь','Минимал':'чистый минимализм, мягкий студийный свет, много пустого пространства, приглушённые цвета'};
+const QUAL=['720p','1080p','4K'];
+const CLIPS=[4,6,8];
+const LEN_S=[15,30,45,60,90,120,180];
+const LEN_L=[60,120,180,300,420,600];
+const FREQ=[1,2,3,4,5,7,14];
+const SL={};
+onb={step:0,d:{niche:'',styleText:'',style:'Кино',format:'Shorts',freq:3,voice:'flow',mode:'approve',quality:'1080p',clipSec:8,lenSec:45,variant:0}};
+
+function bi(en,ru){return esc(en)+(ru?`<span class="ru">${esc(ru)}</span>`:'')}
+function lenArr(f){return f==='Длинные'?LEN_L:LEN_S}
+function fmtSec(s){return s<60?s+' сек':(s%60?Math.floor(s/60)+' мин '+(s%60)+' с':(s/60)+' мин')}
+function sceneCount(c){return Math.max(2,Math.min(30,Math.round((c.lenSec||45)/(c.clipSec||8))))}
+function arOf(f){return f==='Длинные'?'16:9':'9:16'}
+
+/* ---------- ползунки ---------- */
+function slider(k,label,arr,val,fmt,hint){SL[k]={arr:arr,fmt:fmt};let i=arr.indexOf(val);if(i<0)i=0;const p=arr.length>1?i/(arr.length-1)*100:0;
+ return `<div class="glass card slider"><div class="stop"><h3 style="margin:0">${label}</h3><span class="val" id="sv_${k}">${fmt(arr[i])}</span></div><input type="range" min="0" max="${arr.length-1}" step="1" value="${i}" style="--p:${p}%" oninput="slSet('${k}',this)"><div class="ticks" id="st_${k}">${arr.map((x,j)=>`<span class="${j===i?'on':''}">${fmt(x)}</span>`).join('')}</div>${hint?`<p class="muted" style="margin:10px 0 0">${hint}</p>`:''}</div>`}
+function slSet(k,el){const r=SL[k],i=+el.value,v=r.arr[i];onb.d[k]=v;el.style.setProperty('--p',(i/(r.arr.length-1)*100)+'%');$('#sv_'+k).textContent=r.fmt(v);
+ Array.from($('#st_'+k).children).forEach((s,j)=>{s.className=j===i?'on':''});const sc=$('#scn');if(sc)sc.textContent=sceneCount(onb.d);if(navigator.vibrate)navigator.vibrate(5)}
+
+/* ---------- тестовый промпт ---------- */
+function canLocal(d){return !!NICHE_EN[String(d.niche).trim()]&&d.styleText===STYLE_RU[d.style]}
+function isReady(d){return !!(d.ai||d.asIs||canLocal(d))}
+function setupData(d){const a=d.ai;
+ const nEN=a?a.niche_en:(NICHE_EN[String(d.niche).trim()]||String(d.niche).trim());
+ const nRU=a&&a.niche_ru?a.niche_ru:String(d.niche).trim();
+ const sEN=a?a.style_en:(d.styleText===STYLE_RU[d.style]?STYLES[d.style].p:d.styleText);
+ const sRU=a&&a.style_ru?a.style_ru:d.styleText;
+ const V=[['An iconic, dramatic opening shot that represents '+nEN+', one clear main subject, slow push-in camera','Эффектный первый кадр, который передаёт тему «'+nRU+'», один главный объект, камера медленно наезжает'],
+  ['A mysterious close-up detail related to '+nEN+', slowly revealed by light, smooth orbit camera','Загадочная деталь крупным планом по теме «'+nRU+'», свет постепенно её открывает, камера плавно облетает'],
+  ['A wide establishing shot of the world of '+nEN+', atmospheric depth, slow dolly forward','Общий план мира «'+nRU+'», глубокая атмосфера, камера медленно едет вперёд']];
+ const vi=(d.variant||0)%3;let scene=V[vi][0],sceneRu=V[vi][1];
+ if(a&&a.test_scene&&!d.variant){scene=a.test_scene;sceneRu=a.test_scene_ru||sceneRu}
+ const audio=d.voice==='flow'?'deep English narrator voice, subtle ambient sound':'ambient sound only, no speech';
+ const fm='Format: '+arOf(d.format)+', '+d.clipSec+' seconds, '+d.quality+'.';
+ const test=scene+'.'+NL+'Style: '+sEN+'.'+NL+'Audio: '+audio+'.'+NL+fm+NL+'Negative: text, subtitles, watermark, logos, distorted faces, low quality.';
+ const testRu=sceneRu+'. Стиль: '+sRU+'. Звук: '+(d.voice==='flow'?'английский голос рассказчика и лёгкий фон':'только фоновый звук, без речи')+'. Формат '+arOf(d.format)+', '+d.clipSec+' сек, '+d.quality+'.';
+ return {nicheEN:nEN,nicheRu:nRU,styleEN:sEN,styleRu:sRU,test:test,testRu:testRu}}
+function setupAsk(d){const voice=VOICES.find(x=>x.id===d.voice).t;
+ return ['I am creating a YouTube channel. All content must be in ENGLISH, with a Russian translation for me.',
+ 'My niche description (may be in Russian): "'+d.niche+'"',
+ 'My visual style description (may be in Russian): "'+d.styleText+'"',
+ 'Format: '+(d.format==='Длинные'?'long 16:9 videos':'Shorts 9:16')+'. One clip = '+d.clipSec+' seconds. Voice: '+voice+'.',
+ 'Turn this into prompt material for GigaChat video (Kandinsky).','',
+ 'Reply ONLY with valid JSON, no explanations:',
+ '{"niche_en":"short English niche name, 2-4 words","niche_ru":"короткое название ниши","style_en":"30-50 English words of visual style keywords: look, colors, lighting, camera, mood","style_ru":"перевод style_en","test_scene":"one English test scene for Veo: subject, action, setting, camera, lighting","test_scene_ru":"перевод test_scene","names":[{"en":"","ru":""},{"en":"","ru":""},{"en":"","ru":""}],"desc_en":"YouTube channel description in English, 2-3 sentences","desc_ru":"перевод"}'].join(NL)}
+function importSetup(txt){try{const a=txt.indexOf('{'),b=txt.lastIndexOf('}');if(a<0||b<0)throw new Error('JSON не найден');const j=JSON.parse(txt.slice(a,b+1));if(!j.style_en||!j.niche_en)throw new Error('нет style_en / niche_en');
+ onb.d.ai=j;onb.d.variant=0;onb.d.names=null;onb.d.asIs=0;save();render();toast('Промпт готов ✓')}catch(e){toast('Ошибка: '+e.message)}}
+async function aiCall(prompt){const k=S.settings.key;if(!k)throw new Error('нет ключа в Настройках');
+ const r=await fetch(OR_URL,{method:'POST',headers:{'Authorization':'Bearer '+k,'Content-Type':'application/json'},body:JSON.stringify({model:S.settings.model||'openrouter/free',messages:[{role:'user',content:prompt}]})});
+ const j=await r.json();const t=j.choices&&j.choices[0]&&j.choices[0].message&&j.choices[0].message.content;if(!t)throw new Error((j.error&&j.error.message)||'пустой ответ');return t}
+async function setupAuto(){toast('Делаю промпт…');try{importSetup(await aiCall(setupAsk(onb.d)))}catch(e){toast('Ошибка: '+e.message)}}
+function hasRu(t){return /[а-яё]/i.test(String(t||""))}
+function useAsIs(){const d=onb.d;if(hasRu(d.niche)||hasRu(d.styleText))return toast("В тексте есть русские слова — сделайте перевод через Claude");d.asIs=1;render()}
+function pickStyle(k){onb.d.style=k;onb.d.styleText=STYLE_RU[k];onb.d.ai=null;onb.d.names=null;render()}
+function resetAI(){onb.d.ai=null;onb.d.names=null;onb.d.asIs=0}
+function pickTest(){pendingUpload={type:'test'};const f=$('#filepick');f.accept='video/*';f.value='';f.click()}
+
+/* ---------- создание канала ---------- */
+const ONB2=8;
+function vOnb(){const d=onb.d,st=onb.step,pct=Math.round(st/(ONB2-1)*100);let body='';
+ if(st===0)body=`<div style="margin-top:40px"></div><div class="glass card" style="padding:26px"><div class="logo" style="margin-bottom:18px"><b>▶</b>AutoYouTube</div><h1>Ваш ИИ-продюсер<br><span class="red">YouTube-канала</span></h1><p>Вы описываете нишу и стиль — приложение делает промпты для ГигаЧат. Вы генерируете клипы, приложение монтирует, оформляет и публикует.</p><div class="hr"></div><div class="col"><div class="row">✍️<span>Своя ниша и стиль — своими словами</span></div><div class="row">🇬🇧<span>Контент на английском + перевод 🇷🇺</span></div><div class="row">🎬<span>Готовые промпты для ГигаЧат</span></div><div class="row">✂️<span>Автомонтаж + экспорт для CapCut</span></div><div class="row">🚀<span>Публикация по расписанию</span></div></div></div><button class="btn primary block" onclick="onbNext()">Создать канал</button>`;
+ if(st===1)body=`<h1>Ниша канала</h1><p>Опишите своими словами, о чём канал и для кого. Можно по-русски — в промптах будет английский.</p><textarea placeholder="Например: жуткие истории про заброшенные места, спокойный рассказчик, для взрослых" oninput="onb.d.niche=this.value;resetAI()">${esc(d.niche)}</textarea><h2>Или возьмите пример</h2><div class="row wrap">${NICHES.map(n=>`<div class="chip ${d.niche===n?'on':''}" onclick="onbSet('niche',${attr(n)})">${n}</div>`).join('')}</div>`;
+ if(st===2)body=`<h1>Стиль видео</h1><p>Опишите, как вы представляете картинку: цвета, свет, камера, настроение, эпоха, на что похоже.</p><textarea placeholder="Например: тёмное кино, туман, красный свет, медленная камера, как трейлер фильма ужасов" oninput="onb.d.styleText=this.value;resetAI()">${esc(d.styleText)}</textarea><h2>Или возьмите за основу</h2><div class="style-grid">${Object.keys(STYLES).map(k=>`<div class="style ${d.styleText===STYLE_RU[k]?'on':''}" style="background:${STYLES[k].bg};color:${k==='Минимал'?'#000':'#fff'}" onclick="pickStyle(${attr(k)})">${k}</div>`).join('')}</div><p class="muted" style="margin-top:10px">Шаблон можно дописать под себя прямо в поле выше.</p>`;
+ if(st===3){const la=lenArr(d.format);if(la.indexOf(d.lenSec)<0)d.lenSec=d.format==='Длинные'?180:45;
+  body=`<h1>Формат и качество</h1><div class="row" style="gap:8px">${[['Shorts','📱','9:16'],['Длинные','🖥️','16:9'],['Оба','🔀','оба']].map(([k,i,t])=>`<div class="opt ${d.format===k?'on':''}" style="flex:1;text-align:center;padding:12px 6px" onclick="onbSet('format',${attr(k)})"><h3 style="justify-content:center">${i}</h3><b>${k}</b><p style="margin:0">${t}</p></div>`).join('')}</div>`+
+  slider('quality','🎞️ Качество',QUAL,d.quality,x=>x,'ГигаЧат может выдать ниже 4K — приложение само подгонит кадр.')+
+  slider('clipSec','⏱️ Длина одного клипа',CLIPS,d.clipSec,x=>x+' сек','Столько длится одна сцена, сгенерированная в ГигаЧат.')+
+  slider('lenSec','🎬 Длина всего видео',la,d.lenSec,fmtSec,'Сцен в видео: <b id="scn">'+sceneCount(d)+'</b>')+
+  slider('freq','🗓️ Видео в неделю',FREQ,d.freq,x=>x+' / нед','')}
+ if(st===4)body=`<h1>Голос</h1><p>Озвучка и субтитры будут на английском, перевод — рядом в приложении.</p>${VOICES.map(x=>`<div class="opt ${d.voice===x.id?'on':''}" onclick="onbSet('voice','${x.id}')"><h3>${x.i} ${x.t}</h3><p style="margin:0">${x.d}</p></div>`).join('')}`;
+ if(st===5){if(isReady(d)){const s=setupData(d);
+   body=`<h1>Тестовый промпт</h1><p>Скопируйте, сгенерируйте в ГигаЧат и посмотрите — то или не то.</p><div class="glass card"><div class="row between"><span class="pill red">🇬🇧 Для ГигаЧат</span><span class="muted">${arOf(d.format)} · ${d.clipSec} сек · ${d.quality}</span></div><pre class="prompt" style="margin-top:10px">${esc(s.test)}</pre><div class="glass-white card" style="margin:0 0 12px"><b>🇷🇺 Перевод</b><p style="margin:6px 0 0">${esc(s.testRu)}</p></div><div class="row"><button class="btn white sm" style="flex:1" onclick="copy(setupData(onb.d).test)">📋 Копировать</button><button class="btn ghost sm" style="flex:1" onclick="pickTest()">⬆ Загрузить результат</button></div>`+
+   (onb.testUrl?`<video src="${onb.testUrl}" controls playsinline style="width:100%;border-radius:14px;margin-top:12px;max-height:320px;background:#000"></video>`:'')+`</div>
+   <div class="row"><button class="btn ghost" style="flex:1" onclick="onb.d.variant=(onb.d.variant||0)+1;render()">↻ Другая сцена</button><button class="btn ghost" style="flex:1" onclick="onb.step=2;render()">✎ Не то — изменить стиль</button></div><p class="muted" style="text-align:center;margin-top:10px">Если результат нравится — жмите «Далее», этот стиль попадёт во все промпты.</p>`}
+  else{const auto=S.settings.ai==='auto'&&S.settings.key;
+   body=`<h1>Тестовый промпт</h1><p>Ваше описание нужно перевести на английский и превратить в промпт.</p><div class="glass card">`+(auto?`<h3>⚡ OpenRouter (free)</h3><button class="btn primary block" onclick="setupAuto()">✨ Сделать промпт</button>`
+   :`<h3>🧠 Claude вручную</h3><p>1. Скопируйте запрос → 2. вставьте в бесплатный <b>claude.ai</b> → 3. вставьте ответ ниже.</p><button class="btn white block" onclick="copy(setupAsk(onb.d))">📋 Скопировать запрос</button><textarea id="setIn" style="margin-top:12px" placeholder="Вставьте ответ Claude"></textarea><button class="btn primary block" style="margin-top:10px" onclick="importSetup($('#setIn').value)">Сделать промпт</button>`)+
+   `<div class="hr"></div><button class="btn ghost block" onclick="useAsIs()">Мой текст уже на английском — без перевода</button></div>`}}
+ if(st===6)body=`<h1>Режим работы</h1><div class="opt ${d.mode==='approve'?'on':''}" onclick="onbSet('mode','approve')"><h3>✅ Утверждение <span class="pill white" style="margin-left:auto">Рекомендуем</span></h3><p style="margin:0">Вы смотрите и одобряете каждое видео перед публикацией.</p></div><div class="opt ${d.mode==='auto'?'on':''}" onclick="onbSet('mode','auto')"><h3>🚀 Автопилот</h3><p style="margin:0">Готовое видео публикуется само, не больше ${d.freq} в неделю. Остановить — в 1 тап.</p></div>`;
+ if(st===7){if(!d.names){const s=setupData(d);const b=brandFor(Object.assign({},d,s));const ai=d.ai&&Array.isArray(d.ai.names)&&d.ai.names.filter(x=>x&&x.en).length?d.ai.names.filter(x=>x&&x.en):null;
+   d.names=ai||b.names;d.desc=d.ai&&d.ai.desc_en?d.ai.desc_en:b.desc;d.descRu=d.ai&&d.ai.desc_ru?d.ai.desc_ru:b.descRu;d.name=d.names[0].en;d.nameRu=d.names[0].ru||''}
+  body=`<h1>Оформление канала</h1><p>Выберите название. Промпты аватарки и шапки — в разделе «Канал».</p>${d.names.map((n,i)=>`<div class="opt ${d.name===n.en?'on':''}" onclick="onb.d.name=onb.d.names[${i}].en;onb.d.nameRu=onb.d.names[${i}].ru||'';render()"><h3 style="display:block">${bi(n.en,n.ru)}</h3></div>`).join('')}<input id="nameIn" placeholder="Или своё название — можно по-русски 🇷🇺→🇬🇧" oninput="nameInput(this)"><div id="trName" class="tr-hint"></div><h2>Описание 🇬🇧</h2><textarea id="descIn" oninput="descInput(this)">${esc(d.desc)}</textarea><div class="glass-white card" style="margin-top:10px"><b>🇷🇺 Перевод</b><p id="descRuOut" style="margin:6px 0 0">${esc(d.descRu)}</p></div>`}
+ const nav=st===0?'':`<div class="row" style="margin-top:20px"><button class="btn ghost" onclick="onb.step--;render()">←</button><button class="btn ${st===ONB2-1?'white':'primary'}" style="flex:1" onclick="onbNext()">${st===ONB2-1?'Готово — открыть студию':'Далее'}</button></div>`;
+ return (st?`<div class="row between"><span class="muted">Шаг ${st} из ${ONB2-1}</span>${S.channel?`<span class="back" onclick="go('studio')">Отмена</span>`:''}</div><div class="progress"><i style="width:${pct}%"></i></div>`:'')+`<div style="animation:pop .45s var(--spring)">${body}</div>`+nav}
+function onbSet(k,v){onb.d[k]=v;if(k==='niche')resetAI();if(navigator.vibrate)navigator.vibrate(8);render()}
+function onbNext(){const d=onb.d,st=onb.step;
+ if(st===1&&!String(d.niche).trim())return toast('Опишите нишу');
+ if(st===2&&!String(d.styleText).trim())return toast('Опишите стиль');
+ if(st===5&&!isReady(d))return toast('Сначала сделайте промпт');
+ if(st<ONB2-1){onb.step++;render();window.scrollTo({top:0});return}
+ const s=setupData(d),keep=S.channel;
+ S.channel={v2:1,niche:String(d.niche).trim(),nicheEN:s.nicheEN,nicheRu:s.nicheRu,styleText:d.styleText,style:d.style,styleEN:s.styleEN,styleRu:s.styleRu,lang:'English',format:d.format,freq:d.freq,voice:d.voice,mode:d.mode,quality:d.quality,clipSec:d.clipSec,lenSec:d.lenSec,name:d.name||d.names[0].en,nameRu:d.nameRu||'',desc:d.desc,descRu:d.descRu||''};
+ if(!keep||keep.nicheEN!==S.channel.nicheEN)S.ideas=ideasFor(S.channel);save();toast(keep?'Канал обновлён':'Канал создан 🎉');go('studio')}
+function editChannel(){const c=S.channel;onb={step:1,d:Object.assign({},c,{names:null,variant:0,ai:{niche_en:c.nicheEN,niche_ru:c.nicheRu,style_en:c.styleEN,style_ru:c.styleRu}})};go('onb')}
+
+/* ---------- бренд ---------- */
+function brandFor(d){const n=d.nicheEN||d.niche,r=d.nicheRu||d.niche;
+ return {names:[{en:n+' in 60',ru:r+' за 60 секунд'},{en:'The '+n+' Files',ru:'Архив: '+r},{en:n+' Unfiltered',ru:r+' без фильтров'}],
+  desc:'Short, punchy videos about '+n+'. New episodes '+d.freq+'x a week. Visuals made with AI tools, ideas and scripts by a human.',
+  descRu:'Короткие цепляющие видео про «'+r+'». Новые выпуски '+d.freq+' раз(а) в неделю. Визуал создан с помощью ИИ, идеи и сценарии — авторские.'}}
+function avatarPrompt(c){return 'Channel avatar logo for a YouTube channel about "'+c.nicheEN+'". Bold minimal emblem, centered, high contrast, black background with red (#FF2D3D) and white accents, '+c.styleEN+'. Square 1:1, no text, crisp edges, readable at small size.'}
+function bannerPrompt(c){return 'YouTube channel banner 2560x1440, important content inside the centered safe area 1546x423. Theme: "'+c.nicheEN+'". Dark background with red and white glowing accents, '+c.styleEN+'. Leave clean space in the center for the channel name "'+c.name+'". No small text.'}
+function vBrand(){const c=S.channel;
+ return `<span class="back" onclick="go('more')">← Ещё</span><h1>Оформление</h1>
+ <div class="glass card"><h3>Название</h3><input value="${esc(c.name)}" oninput="S.channel.name=this.value;save()">${c.nameRu?`<p class="muted" style="margin-top:8px">🇷🇺 ${esc(c.nameRu)}</p>`:''}<p class="muted" style="margin-top:8px">Название и аватарку YouTube разрешает менять только вручную: YouTube → Настроить канал.</p><button class="btn white sm" onclick="copy(S.channel.name)">📋 Копировать</button></div>
+ <div class="glass card"><h3>Описание канала 🇬🇧</h3><textarea oninput="S.channel.desc=this.value;save()">${esc(c.desc)}</textarea><div class="glass-white card" style="margin:10px 0"><b>🇷🇺 Перевод</b><p style="margin:6px 0 0">${esc(c.descRu)}</p></div><div class="row"><button class="btn white sm" style="flex:1" onclick="copy(S.channel.desc)">📋 Копировать</button><button class="btn ghost sm" style="flex:1" onclick="const b=brandFor(S.channel);S.channel.desc=b.desc;S.channel.descRu=b.descRu;save();render()">↻ Заново</button></div></div>
+ <div class="glass card"><h3>🟥 Аватарка</h3><pre class="prompt">${esc(avatarPrompt(c))}</pre><p class="muted">🇷🇺 Логотип-эмблема канала про «${esc(c.nicheRu)}», чёрный фон, красные и белые акценты, ваш стиль, квадрат, без текста.</p><button class="btn white sm block" onclick="copy(avatarPrompt(S.channel))">📋 Промпт для ГигаЧат</button></div>
+ <div class="glass card"><h3>🖼️ Шапка канала</h3><pre class="prompt">${esc(bannerPrompt(c))}</pre><p class="muted">🇷🇺 Баннер 2560×1440, тёмный фон с красным и белым свечением, в центре место под название «${esc(c.name)}».</p><button class="btn white sm block" onclick="copy(bannerPrompt(S.channel))">📋 Промпт для ГигаЧат</button></div>`}
+
+/* ---------- идеи ---------- */
+function ideasFor(c,k){k=k||6;const n=c.nicheEN||c.niche,r=c.nicheRu||c.niche;
+ const T=[['5 facts about '+n+' nobody tells you','5 фактов про «'+r+'», о которых молчат'],['What if '+n+' disappeared tomorrow?','Что, если «'+r+'» исчезнет завтра?'],['The weirdest story in '+n,'Самая странная история в теме «'+r+'»'],['I tested the biggest myth about '+n,'Проверил главный миф про «'+r+'»'],[n+': 3 mistakes everyone makes','«'+r+'»: 3 ошибки, которые делают все'],[n+' in 100 years','«'+r+'» через 100 лет'],['The darkest secret of '+n,'Тёмная тайна темы «'+r+'»'],[n+' explained in 60 seconds','«'+r+'» — объяснение за 60 секунд']];
+ return T.sort(()=>Math.random()-.5).slice(0,k).map(x=>({id:uid(),title:x[0],ru:x[1],ctr:(5+Math.random()*7).toFixed(1),uniq:Math.round(60+Math.random()*38),diff:['Легко','Средне','Сложно'][Math.floor(Math.random()*3)]}))}
+function vIdeas(){const top=S.ideas.slice(0,3).reverse();
+ return header()+`<h1>Идеи</h1><p>Свайп вправо — в работу, влево — пропустить.</p>`+
+ (top.length?`<div class="swipe">${top.map((x,i)=>{const off=top.length-1-i;return `<div class="glass scard" ${off===0?'id="topcard"':''} style="transform:translateY(${off*12}px) scale(${1-off*.04});opacity:${1-off*.25};z-index:${i}"><div><span class="pill red">🇬🇧 Идея</span><div class="big" style="margin-top:16px">${bi(x.title,x.ru)}</div></div><div class="metric"><div><b>${x.ctr}%</b><small>Прогноз CTR</small></div><div><b>${x.uniq}%</b><small>Уникальность</small></div><div><b>${x.diff}</b><small>Сложность</small></div></div></div>`}).join('')}</div>
+  <div class="row" style="justify-content:center;gap:22px"><button class="btn ghost round" onclick="swipe(false)">✕</button><button class="btn primary round" onclick="swipe(true)">✓</button></div>`
+  :`<div class="glass card empty"><div class="ill">💡</div><h3>Идеи закончились</h3><p>Сгенерируем ещё под вашу нишу.</p></div>`)+
+ `<button class="btn white block" style="margin-top:18px" onclick="S.ideas=S.ideas.concat(ideasFor(S.channel));save();render()">✨ Сгенерировать ещё</button>`}
+function swipe(yes){const el=$('#topcard');const it=S.ideas.shift();if(el){el.style.transform=`translateX(${yes?420:-420}px) rotate(${yes?18:-18}deg)`;el.style.opacity=0}
+ if(yes&&it){S.videos.push({id:uid(),title:it.title,titleRu:it.ru||'',stage:1,created:Date.now(),scenes:null,tab:'script'});toast('В работу ✓')}
+ save();setTimeout(render,260)}
+
+/* ---------- сценарий ---------- */
+function claudePrompt(v,c){const n=sceneCount(c),cs=c.clipSec||8;const voice={flow:'narration generated inside the GigaChat clip',mine:'author records English voiceover',tts:'text-to-speech English voice',none:'no voice, music and subtitles only'}[c.voice];
+ return ['You are a scriptwriter for a YouTube channel. Niche: '+c.nicheEN+'. Format: '+(c.format==='Длинные'?'long video 16:9':'YouTube Shorts 9:16')+', total length about '+(n*cs)+' seconds. Voice: '+voice+'.',
+ 'Visual style for EVERY scene: '+c.styleEN+'.',
+ 'Video topic: "'+v.title+'".','',
+ 'Write a script of '+n+' scenes, '+cs+' seconds each: strong hook in the first 3 seconds, retention, open loops, call to subscribe at the end.',
+ 'ALL content must be in ENGLISH. For the author, add a Russian translation next to text fields in fields ending with _ru.',
+ 'For each scene give fields for GigaChat video (Kandinsky): subject, action, setting, camera, lighting, audio, negative. voiceover must fit into '+cs+' seconds of speech.',
+ 'Also give 3 titles, a description with timestamps, 10 tags and thumbnail_prompt (16:9, bright, one large subject, no text).','',
+ 'Reply ONLY with valid JSON, no explanations, strictly in this format:',
+ '{"scenes":[{"text":"what happens","text_ru":"","voiceover":"","voiceover_ru":"","subject":"","action":"","setting":"","camera":"","lighting":"","audio":"","negative":""}],"titles":[{"en":"","ru":""},{"en":"","ru":""},{"en":"","ru":""}],"description":"","description_ru":"","tags":[""],"thumbnail_prompt":""}'].join(NL)}
+function parseAI(txt){const a=txt.indexOf('{'),b=txt.lastIndexOf('}');if(a<0||b<0)throw new Error('JSON не найден');const j=JSON.parse(txt.slice(a,b+1));if(!Array.isArray(j.scenes)||!j.scenes.length)throw new Error('нет сцен');
+ j.scenes=j.scenes.map(s=>({text:s.text||'',text_ru:s.text_ru||'',voiceover:s.voiceover||'',voiceover_ru:s.voiceover_ru||'',subject:s.subject||'',action:s.action||'',setting:s.setting||'',camera:s.camera||'',lighting:s.lighting||'',audio:s.audio||'',negative:s.negative||'text, watermark, logos, distorted faces'}));return j}
+function applyScript(v,j){const tt=(j.titles&&j.titles.length?j.titles:[{en:v.title,ru:v.titleRu}]).slice(0,3).map(t=>typeof t==='string'?{en:t,ru:''}:{en:t.en||'',ru:t.ru||''});
+ v.scenes=j.scenes.map(s=>Object.assign({},s,{clip:null}));v.titles=tt.map(t=>t.en);v.titlesRu=tt.map(t=>t.ru);v.titleSel=0;v.description=j.description||'';v.descriptionRu=j.description_ru||'';v.tags=j.tags||[];v.thumb=j.thumbnail_prompt||'';v.stage=Math.max(v.stage,2)}
+function demoScenes(v,c){const n=sceneCount(c),ne=c.nicheEN,nr=c.nicheRu;
+ const P=[['Hook: a shocking shot that stops the scroll','Хук: шокирующий кадр, который останавливает скролл'],['Context: what the question is','Контекст: в чём вопрос'],['First twist','Первый поворот'],['The main fact','Главный факт'],['An unexpected detail','Неожиданная деталь'],['Extra fact','Дополнительный факт']];
+ const cams=['slow pan','orbit shot','handheld tracking','top-down','static wide'];const out=[];
+ for(let i=0;i<n;i++){const last=i===n-1,p=last?['Ending + call to subscribe','Финал + призыв подписаться']:P[Math.min(i,P.length-1)];
+  out.push({text:p[0],text_ru:p[1],voiceover:i===0?'You definitely did not know this about '+ne+'...':last?'Subscribe so you never miss the next episode!':'Part '+(i+1)+': '+v.title,
+   voiceover_ru:i===0?'Ты точно не знал этого про «'+nr+'»…':last?'Подпишись, чтобы не пропустить следующий выпуск!':'Часть '+(i+1)+': '+(v.titleRu||v.title),
+   subject:i===0?'Dramatic close-up visual metaphor for "'+v.title+'"':'Scene '+(i+1)+' illustrating "'+v.title+'"',action:i===0?'sudden reveal, fast push-in':'slow meaningful movement, clear visual storytelling',setting:'the world of '+ne,camera:i===0?'fast dolly-in, low angle':cams[i%5],lighting:'dramatic contrast, red rim light',audio:c.voice==='flow'?'English narrator voice reads the line, subtle ambient sound':'ambient sound only, no speech',negative:'text, subtitles, watermark, logos, distorted faces, extra fingers, low quality'})}
+ return out}
+function demoPackage(v,c){return{scenes:demoScenes(v,c),titles:[{en:v.title,ru:v.titleRu||''},{en:v.title+' 😱',ru:(v.titleRu||'')+' 😱'},{en:'The truth about '+c.nicheEN,ru:'Правда про «'+c.nicheRu+'»'}],
+ description:['In this video: '+v.title,'','0:00 Hook','0:08 Story','0:40 Ending','','#shorts'].join(NL),description_ru:['В этом видео: '+(v.titleRu||v.title),'','0:00 Хук','0:08 История','0:40 Финал'].join(NL),
+ tags:[c.nicheEN,'shorts','facts','interesting','top'],thumbnail_prompt:'YouTube thumbnail 16:9 for "'+v.title+'", one huge expressive subject, red and black palette, white glow outline, '+c.styleEN+', no text'}}
+function flowPrompt(sc,c){return sc.subject+'. '+sc.action+'.'+NL+'Setting: '+sc.setting+'.'+NL+'Camera: '+sc.camera+'.'+NL+'Lighting: '+sc.lighting+'.'+NL+'Style: '+c.styleEN+'.'+NL+'Audio: '+sc.audio+(c.voice==='flow'&&sc.voiceover?' Line: "'+sc.voiceover+'"':'')+'.'+NL+'Format: '+ar()+', '+(c.clipSec||8)+' seconds, '+(c.quality||'1080p')+'.'+NL+'Negative: '+sc.negative+'.'}
+function srt(v){const d=S.channel.clipSec||8;const p=n=>String(n).padStart(2,'0');const f=t=>p(Math.floor(t/3600))+':'+p(Math.floor(t%3600/60))+':'+p(t%60)+',000';return v.scenes.map((s,i)=>(i+1)+NL+f(i*d)+' --> '+f(i*d+d)+NL+s.voiceover+NL).join(NL)}
+function capcutPlan(v){const d=S.channel.clipSec||8;return ['ПЛАН МОНТАЖА — '+v.titles[v.titleSel||0],'Формат: '+ar()+' · '+(S.channel.quality||'1080p'),''].join(NL)+v.scenes.map((s,i)=>String(i+1).padStart(2,'0')+'. '+(s.clip||'(нет клипа)')+'  |  '+(i*d)+'–'+(i*d+d)+' c'+NL+'    Voiceover: '+s.voiceover+NL+'    Перевод: '+(s.voiceover_ru||'')+NL+'    Сцена: '+(s.text_ru||s.text)).join(NL+NL)+NL+NL+'Импорт: CapCut → Новый проект → добавьте клипы по номерам → Текст → Импорт субтитров → subtitles.srt'}
+function tabScript(v,c){const manual=S.settings.ai!=='auto';const d=c.clipSec||8;
+ return `<div class="glass card"><h3>${manual?'🧠 Claude вручную':'⚡ Бесплатная модель OpenRouter'}</h3>`+
+ (manual?`<p>1. Скопируйте запрос → 2. вставьте в бесплатный <b>claude.ai</b> → 3. скопируйте ответ и вставьте ниже.</p><button class="btn white block" onclick="copy(claudePrompt(cur(),S.channel))">📋 Скопировать запрос для Claude</button><textarea id="aiIn" style="margin-top:12px" placeholder="Вставьте сюда ответ Claude"></textarea><button class="btn primary block" style="margin-top:10px" onclick="importAI()">Разобрать ответ</button>`
+ :`<p>Модель напишет сценарий сама. Нужен бесплатный ключ в Настройках.</p><button class="btn primary block" onclick="autoAI()">✨ Написать сценарий</button>`)+
+ `<p class="muted" style="margin:10px 0 0">${sceneCount(c)} сцен × ${d} сек · ${c.quality} · всё на английском + перевод</p><div class="hr"></div><button class="btn ghost block" onclick="demoScript()">Попробовать на демо-сценарии</button></div>`+
+ (v.scenes?`<h2>Сценарий · ${v.scenes.length} сцен</h2>`+v.scenes.map((s,i)=>`<div class="glass card"><span class="pill red">Сцена ${i+1} · ${i*d}–${i*d+d} c</span><p style="margin-top:10px;color:#fff"><b>${bi(s.text,s.text_ru)}</b></p><p style="margin:0;color:#fff">🎙️ ${bi(s.voiceover,s.voiceover_ru)}</p></div>`).join(''):'')}
+function tabScenes(v,c){const up=v.scenes.filter(s=>s.clip).length;
+ return `<div class="glass-white card"><div class="row between"><div><h3>Промпты для ГигаЧат</h3><p style="margin:0">${up} из ${v.scenes.length} клипов загружено</p></div><button class="btn sm primary" onclick="copyAll()">Копировать всё</button></div><div class="bar" style="background:rgba(0,0,0,.1)"><i style="width:${up/v.scenes.length*100}%"></i></div></div>`+
+ v.scenes.map((s,i)=>{const p=flowPrompt(s,c);const url=clips[v.id+'_'+i];
+  return `<div class="glass card"><div class="row between"><span class="pill ${s.clip?'white':'red'}">${s.clip?'✓ ':''}Сцена ${i+1}</span><span class="muted">${ar()} · ${c.clipSec||8} сек · ${c.quality||'1080p'}</span></div><p style="margin-top:10px;color:#fff"><b>${bi(s.text,s.text_ru)}</b></p><p style="margin:0 0 10px;color:#fff">🎙️ ${bi(s.voiceover,s.voiceover_ru)}</p><pre class="prompt">${esc(p)}</pre>`+
+  (url?`<video src="${url}" controls playsinline style="width:100%;border-radius:14px;margin-bottom:10px;max-height:260px;background:#000"></video>`:s.clip?`<p class="muted">📎 ${esc(s.clip)} — после перезапуска загрузите снова</p>`:'')+
+  `<div class="row"><button class="btn white sm" style="flex:1" onclick="copyScene(${i})">📋 Копировать</button><button class="btn ${s.clip?'ghost':'primary'} sm" style="flex:1" onclick="pickClip(${i})">${s.clip?'↻ Заменить':'⬆ Загрузить клип'}</button></div></div>`}).join('')}
+function tabPublish(v,c){v.checks=v.checks||{};const okAll=CHECKS.every(([k])=>v.checks[k]);const tr=v.titlesRu||[];
+ const hint=S.paused?'Сейчас всё остановлено':v.stage<4?'Сначала смонтируйте видео':okAll?'':'Отметьте все пункты чек-листа';
+ return `<div class="glass card"><h3>Заголовок 🇬🇧</h3>${v.titles.map((t,i)=>`<div class="opt ${(v.titleSel||0)===i?'on':''}" style="padding:12px" onclick="cur().titleSel=${i};save();render()">${bi(t,tr[i])}</div>`).join('')}<h3 style="margin-top:12px">Описание 🇬🇧</h3><textarea oninput="cur().description=this.value;save()">${esc(v.description)}</textarea>${v.descriptionRu?`<div class="glass-white card" style="margin:10px 0 0"><b>🇷🇺 Перевод</b><p style="margin:6px 0 0;white-space:pre-line">${esc(v.descriptionRu)}</p></div>`:''}<h3 style="margin-top:12px">Теги</h3><div class="row wrap">${(v.tags||[]).map(t=>`<span class="pill">#${esc(t)}</span>`).join('')}</div></div>
+ <div class="glass card"><h3>🖼️ Обложка</h3><p>Сгенерируйте в ГигаЧат и загрузите сюда.</p><pre class="prompt">${esc(v.thumb)}</pre><div class="row"><button class="btn white sm" style="flex:1" onclick="copy(cur().thumb||'')">📋 Промпт</button><button class="btn ghost sm" style="flex:1" onclick="pickThumb()">${v.thumbFile?'✓ '+esc(v.thumbFile):'⬆ Загрузить'}</button></div></div>
+ <div class="glass card"><h3>🛡️ Чек-лист перед публикацией</h3>${CHECKS.map(([k,t])=>`<label class="check"><input type="checkbox" ${v.checks[k]?'checked':''} onchange="cur().checks['${k}']=this.checked;save();render()"><span>${t}</span></label>`).join('')}<div class="hr"></div><div class="row between"><span>Флаг «ИИ-контент» на YouTube</span><div class="switch ${v.ai!==false?'on':''}" onclick="cur().ai=cur().ai===false;save();render()"></div></div></div>
+ <div class="glass card"><h3>🗓️ Дата публикации</h3><input type="datetime-local" id="pubAt" value="${v.publishAt||defaultSlot()}"><p class="muted" style="margin-top:8px">Публикует сам YouTube по таймеру — телефон можно выключить.</p></div>`+
+ (v.stage>=5?`<div class="glass-white card"><h3>✅ Запланировано</h3><p style="margin:0">${esc(String(v.publishAt).replace('T',' '))}</p></div><button class="btn ghost block" onclick="cur().stage=4;save();render()">Отменить публикацию</button>`
+ :`<div class="row"><button class="btn ghost" onclick="rejectVideo()">Отклонить</button><button class="btn primary" style="flex:1" ${okAll&&v.stage>=4&&!S.paused?'':'disabled'} onclick="approve()">Утвердить и запланировать</button></div><p class="muted" style="margin-top:8px;text-align:center">${hint}</p>`)}
+function onFile(e){const file=e.target.files[0];if(!file||!pendingUpload)return;
+ if(pendingUpload.type==='test'){onb.testUrl=URL.createObjectURL(file);toast('Тестовый клип загружен');render();return}
+ const v=cur();
+ if(pendingUpload.type==='clip'){const i=pendingUpload.i;clips[v.id+'_'+i]=URL.createObjectURL(file);v.scenes[i].clip=file.name;if(v.scenes.every(s=>s.clip))v.stage=Math.max(v.stage,3);toast('Клип сцены '+(i+1)+' загружен')}
+ else{v.thumbFile=file.name;toast('Обложка загружена')}save();render()}
+
+/* ---------- миграция старых данных ---------- */
+(function(){const c=S.channel;if(c&&!c.v2){c.nicheEN=NICHE_EN[c.niche]||c.niche;c.nicheRu=c.niche;c.style=c.style||'Кино';c.styleEN=(STYLES[c.style]||STYLES['Кино']).p;c.styleRu=STYLE_RU[c.style]||'';c.styleText=c.styleRu;c.quality='1080p';c.clipSec=8;c.lenSec=c.format==='Длинные'?180:45;c.lang='English';
+ const b=brandFor(c);c.descRu=b.descRu;c.desc=b.desc;S.ideas=ideasFor(c);c.v2=1;save()}})();
+
+/* ---------- автопереводчик RU → EN (бесплатно, без ключа) ---------- */
+const TRC={};
+async function trRuEn(t){t=String(t||'').trim();if(!t)return '';if(TRC[t])return TRC[t];let out='';
+ try{const r=await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl=ru&tl=en&dt=t&q='+encodeURIComponent(t));const j=await r.json();out=(j[0]||[]).map(x=>x[0]).join('')}catch(e){}
+ if(!out){try{const r=await fetch('https://api.mymemory.translated.net/get?langpair=ru|en&q='+encodeURIComponent(t));const j=await r.json();out=j&&j.responseData&&j.responseData.translatedText||''}catch(e){}}
+ if(!out&&S.settings.key){try{out=(await aiCall('Translate from Russian to natural English. Reply with ONLY the translation:'+NL+t)).trim()}catch(e){}}
+ if(out)TRC[t]=out;return out}
+function titleCase(s){return s.replace(/[.!?]+$/,'').split(' ').map(w=>w?w[0].toUpperCase()+w.slice(1):w).join(' ')}
+let trT1=null,trT2=null;
+function nameInput(el){const v=el.value,h=$('#trName');document.querySelectorAll('.opt.on').forEach(o=>o.classList.remove('on'));
+ if(!hasRu(v)){onb.d.name=v;onb.d.nameRu='';h.innerHTML='';return}
+ h.innerHTML='<span class="muted">⏳ Перевожу…</span>';clearTimeout(trT1);
+ trT1=setTimeout(async()=>{const ru=el.value;const en=titleCase(await trRuEn(ru));if(el.value!==ru)return;
+  if(!en){h.innerHTML='<span class="red">Нет интернета — напишите по-английски</span>';return}
+  onb.d.name=en;onb.d.nameRu=ru;h.innerHTML='<div class="tr-card"><span class="pill red">🇬🇧 На канале</span><b>'+esc(en)+'</b><span class="ru">'+esc(ru)+'</span></div>'},700)}
+function descInput(el){const v=el.value;onb.d.desc=v;if(!hasRu(v))return;clearTimeout(trT2);
+ trT2=setTimeout(async()=>{const ru=el.value;const en=await trRuEn(ru);if(!en||el.value!==ru)return;onb.d.desc=en;onb.d.descRu=ru;el.value=en;const o=$('#descRuOut');if(o)o.textContent=ru;toast('Описание переведено на английский ✓')},1200)}
+
+/* ---------- v3: ГигаЧат, обрезка вотермарки, переделка промпта ---------- */
+const WM_STEPS=[0,0.5,1,1.5,2,2.5,3,4];
+function wm(){const c=S.channel||{};return c.wmTrim==null?1.5:c.wmTrim}
+function effSec(){const c=S.channel||{};return Math.max(1,(c.clipSec||8)-wm())}
+
+const SAFE_MAP=[
+ ['blood','red paint'],['bloody','red-stained'],['gore','dramatic mess'],['corpse','motionless figure'],['dead body','motionless figure'],['dead','still'],['death','ending'],['kill','defeat'],['killing','defeating'],['killer','mysterious stranger'],['murder','mystery'],['gun','prop device'],['guns','prop devices'],['rifle','long prop'],['knife','tool'],['weapon','object'],['weapons','objects'],['bomb','glowing device'],['explosion','bright flash of light'],['explodes','bursts into light'],['war','historic conflict'],['soldier','explorer'],['soldiers','explorers'],['terror','tension'],['horror','mystery'],['scary','eerie'],['terrifying','unsettling'],['demon','shadowy figure'],['ghost','translucent silhouette'],['monster','strange creature'],['scream','gasp'],['screaming','gasping'],['drugs','pills'],['alcohol','drinks'],['naked','dressed'],['sexy','elegant'],['suicide','despair'],['fight','confrontation'],['attack','approach'],['violence','tension'],['violent','intense'],['crash','sudden stop'],['fire','warm glow'],['burning','glowing'],['politician','official'],['president','leader'],['police','guards'],['prison','closed room'],['child','young character'],['children','young characters'],['real person','fictional character'],['celebrity','fictional character'],['logo','emblem'],['brand','product']];
+function safeText(t){let s=String(t||'');SAFE_MAP.forEach(([a,b])=>{s=s.replace(new RegExp('(^|[^a-z])'+a+'(?=[^a-z]|$)','gi'),(m,p)=>p+b)});return s}
+
+function gigaPrompt(sc,c){const lv=sc.safe||0;const st=c.styleEN||(STYLES[c.style]||{}).p||'';
+ if(sc.custom)return sc.custom;
+ const F=x=>lv>0?safeText(x):x;
+ const fmt='Format: '+ar()+', '+(c.clipSec||8)+' seconds, '+(c.quality||'1080p')+'.';
+ if(lv>=3)return F(sc.subject)+' '+F(sc.action)+' in '+F(sc.setting)+'. '+st+'. Calm, family-friendly, fictional scene. '+fmt;
+ let p=F(sc.subject)+'. '+F(sc.action)+'.'+NL+'Setting: '+F(sc.setting)+'.'+NL+'Camera: '+sc.camera+'.'+NL+'Lighting: '+F(sc.lighting)+'.'+NL+'Style: '+st+'.'+NL;
+ if(lv<2)p+='Audio: '+F(sc.audio)+'.'+NL;
+ p+=fmt;
+ if(lv>=1)p+=NL+'All characters are fictional. No violence, no real people, no brands, family-friendly.';
+ if(lv<2)p+=NL+'Negative: '+sc.negative+'.';
+ return p}
+function flowPrompt(sc,c){return gigaPrompt(sc,c)}
+
+function rewriteAsk(sc,c){return ['This prompt for the GigaChat video generator (Kandinsky) was rejected by its content rules.',
+ 'Rewrite it so it passes: no violence, blood, weapons, real people or celebrities, politics, brands, drugs, adult or scary-graphic content.',
+ 'Keep the SAME meaning, subject, action, mood, camera and style — only soften or replace the risky words with neutral visual equivalents.',
+ 'Keep it in English and keep the format line. Reply with ONLY the new prompt text, nothing else.','',gigaPrompt(Object.assign({},sc,{custom:null,safe:0}),c)].join(NL)}
+
+async function redoPrompt(i){const v=cur(),sc=v.scenes[i],c=S.channel;
+ if(S.settings.ai==='auto'&&S.settings.key){toast('Переделываю под правила ГигаЧат…');
+  try{let t=(await aiCall(rewriteAsk(sc,c))).trim().replace(/^```[a-z]*|```$/g,'').trim();if(!t)throw new Error('пустой ответ');sc.custom=t;sc.redo=(sc.redo||0)+1;save();render();toast('Промпт переделан ✓');return}
+  catch(e){toast('ИИ не ответил — делаю сам')}}
+ sc.custom=null;sc.safe=Math.min(3,(sc.safe||0)+1);sc.redo=(sc.redo||0)+1;
+ if(sc.safe===3&&sc.redo>3)toast('Максимально мягкий вариант. Можно через Claude ↓');else toast('Вариант '+(sc.safe+1)+' — смысл тот же');save();render()}
+function redoClaude(i){copy(rewriteAsk(cur().scenes[i],S.channel));const el=$('#rw'+i);if(el)el.style.display='block';toast('Запрос скопирован — вставьте в claude.ai')}
+function redoPaste(i){const t=($('#rwt'+i).value||'').trim();if(!t)return toast('Вставьте ответ Claude');const sc=cur().scenes[i];sc.custom=t;sc.redo=(sc.redo||0)+1;save();render();toast('Промпт обновлён ✓')}
+function redoReset(i){const sc=cur().scenes[i];sc.custom=null;sc.safe=0;sc.redo=0;save();render()}
+
+function tabScenes(v,c){const up=v.scenes.filter(s=>s.clip).length;
+ return `<div class="glass-white card"><div class="row between"><div><h3>Промпты для ГигаЧат</h3><p style="margin:0">${up} из ${v.scenes.length} клипов загружено</p></div><button class="btn sm primary" onclick="copyAll()">Копировать всё</button></div><div class="bar" style="background:rgba(0,0,0,.1)"><i style="width:${up/v.scenes.length*100}%"></i></div><p class="muted" style="margin:8px 0 0;color:rgba(0,0,0,.55)">Промпт не прошёл? Жмите «↻ Переделать» — смысл останется, уйдут «опасные» слова.</p></div>`+
+ v.scenes.map((s,i)=>{const p=gigaPrompt(s,c);const url=clips[v.id+'_'+i];const r=s.redo||0;
+  return `<div class="glass card"><div class="row between"><span class="pill ${s.clip?'white':'red'}">${s.clip?'✓ ':''}Сцена ${i+1}</span><span class="muted">${ar()} · ${c.clipSec||8} сек · ${c.quality||'1080p'}</span></div><p style="margin-top:10px;color:#fff"><b>${bi(s.text,s.text_ru)}</b></p><p style="margin:0 0 10px;color:#fff">🎙️ ${bi(s.voiceover,s.voiceover_ru)}</p>`+
+  (r?`<div class="row between" style="margin-bottom:6px"><span class="pill white">🛡️ Вариант ${r+1}${s.custom?' · ИИ':''}</span><button class="btn ghost sm" onclick="redoReset(${i})">↺ Исходный</button></div>`:'')+
+  `<pre class="prompt">${esc(p)}</pre>`+
+  (url?`<video src="${url}" controls playsinline style="width:100%;border-radius:14px;margin-bottom:10px;max-height:260px;background:#000"></video>`:s.clip?`<p class="muted">📎 ${esc(s.clip)} — после перезапуска загрузите снова</p>`:'')+
+  `<div class="row"><button class="btn white sm" style="flex:1" onclick="copyScene(${i})">📋 Копировать</button><button class="btn ghost sm" style="flex:1" onclick="redoPrompt(${i})">↻ Переделать</button></div>`+
+  `<div class="row" style="margin-top:8px"><button class="btn ${s.clip?'ghost':'primary'} sm" style="flex:1" onclick="pickClip(${i})">${s.clip?'↻ Заменить клип':'⬆ Загрузить клип'}</button><button class="btn ghost sm" onclick="redoClaude(${i})">🧠 через Claude</button></div>`+
+  `<div id="rw${i}" style="display:none;margin-top:8px"><textarea id="rwt${i}" placeholder="Вставьте новый промпт от Claude"></textarea><button class="btn primary sm block" style="margin-top:8px" onclick="redoPaste(${i})">✓ Применить</button></div></div>`}).join('')}
+
+/* ползунок обрезки вотермарки (вне онбординга) */
+function wmSlider(){const a=WM_STEPS;let i=a.indexOf(wm());if(i<0)i=3;const p=i/(a.length-1)*100;
+ return `<div class="slider"><div class="stop"><span>✂️ Обрезать конец клипа</span><span class="val" id="wmv">${a[i]} сек</span></div><input type="range" min="0" max="${a.length-1}" step="1" value="${i}" style="--p:${p}%" oninput="wmSet(this)"><div class="ticks">${a.map((x,j)=>`<span class="${j===i?'on':''}">${x}</span>`).join('')}</div></div>`}
+function wmSet(el){const i=+el.value,a=WM_STEPS;S.channel.wmTrim=a[i];el.style.setProperty('--p',(i/(a.length-1)*100)+'%');$('#wmv').textContent=a[i]+' сек';el.parentNode.querySelectorAll('.ticks span').forEach((s,j)=>s.className=j===i?'on':'');save()}
+
+/* автоопределение: ищем резкую смену кадра в последних 4 секундах */
+function frameAt(vd,t,cv){return new Promise(res=>{vd.onseeked=()=>{const x=cv.getContext('2d');x.drawImage(vd,0,0,32,32);res(x.getImageData(0,0,32,32).data)};vd.currentTime=t})}
+function diff(a,b){let s=0;for(let k=0;k<a.length;k+=4)s+=Math.abs(a[k]-b[k])+Math.abs(a[k+1]-b[k+1])+Math.abs(a[k+2]-b[k+2]);return s/(a.length/4)/765}
+async function detectWM(url){const vd=document.createElement('video');vd.muted=true;vd.preload='auto';vd.src=url;
+ await new Promise((r,j)=>{vd.onloadedmetadata=r;vd.onerror=j});const D=vd.duration;if(!D||!isFinite(D))return null;
+ const cv=document.createElement('canvas');cv.width=32;cv.height=32;const start=Math.max(0,D-4.2),step=0.1;
+ let prev=await frameAt(vd,start,cv),best=0,bt=null;
+ for(let t=start+step;t<D-0.05;t+=step){const f=await frameAt(vd,t,cv);const d=diff(prev,f);if(d>best){best=d;bt=t}prev=f}
+ if(best<0.12||bt==null)return null;return Math.min(4,Math.round((D-bt+0.1)*10)/10)}
+async function autoWM(){const v=cur();const url=v.scenes.map((_,i)=>clips[v.id+'_'+i]).find(Boolean);if(!url)return toast('Сначала загрузите хотя бы один клип');
+ toast('Ищу анимацию вотермарки…');try{const t=await detectWM(url);if(t==null)return toast('Не нашёл — оставляю '+wm()+' сек');
+  const near=WM_STEPS.reduce((a,b)=>Math.abs(b-t)<Math.abs(a-t)?b:a);S.channel.wmTrim=Math.max(near,t>near?near+0.5:near);if(S.channel.wmTrim>4)S.channel.wmTrim=4;save();render();toast('Вотермарка ≈ '+t+' сек — будет обрезана ✓')}catch(e){toast('Не удалось проверить клип')}}
+
+function tabEdit(v,c){const miss=v.scenes.filter(s=>!s.clip).length;
+ return (miss?`<div class="banner">Не хватает клипов: ${miss}. Загрузите их во вкладке «Сцены».</div>`:'')+
+ `<div class="player ${ar()==='16:9'?'wide':''}"><video id="pv" playsinline></video><div class="subs" id="subs"></div></div>
+ <div class="glass card"><h3>🚫 Вотермарка ГигаЧат</h3><p>Анимация в конце каждого клипа обрезается автоматически.</p>${wmSlider()}<button class="btn white sm block" style="margin-top:10px" onclick="autoWM()">🔍 Найти само по моему клипу</button><p class="muted" style="margin:8px 0 0">Итого в видео от каждого клипа: ${effSec()} сек.</p></div>
+ <div class="glass card"><h3>✂️ Автомонтаж</h3><p>Склейка по сценам без вотермарки, субтитры из озвучки, музыка, кадр ${ar()}.</p><label class="check"><input type="checkbox" checked><span>Анимированные субтитры</span></label><label class="check"><input type="checkbox" checked><span>Фоновая музыка без авторских прав</span></label><button class="btn primary block" ${miss?'disabled':''} onclick="montage()">${v.stage>=4?'▶ Смотреть монтаж':'✨ Смонтировать'}</button><p class="muted" style="margin:10px 0 0">В прототипе — предпросмотр. В Android-версии — готовый MP4.</p></div>
+ <div class="glass card"><h3>Экспорт для CapCut</h3><p>Субтитры и план: порядок клипов, тайминги с учётом обрезки.</p><div class="row"><button class="btn white sm" style="flex:1" onclick="download('subtitles.srt',srt(cur()))">⬇ Субтитры .srt</button><button class="btn ghost sm" style="flex:1" onclick="download('capcut-plan.txt',capcutPlan(cur()))">⬇ План монтажа</button></div></div>`}
+
+function montage(){const v=cur();const urls=v.scenes.map((_,i)=>clips[v.id+'_'+i]);if(urls.some(u=>!u))return toast('Загрузите клипы заново');
+ v.stage=Math.max(v.stage,4);save();const pv=$('#pv'),sb=$('#subs');let i=0,busy=false;const trim=wm();
+ const play=()=>{busy=false;if(i>=urls.length){pv.pause();sb.innerHTML='';toast('Монтаж готов ✓');render();return}pv.src=urls[i];sb.innerHTML='<span>'+esc(v.scenes[i].voiceover)+'</span>';pv.play().catch(()=>{});i++};
+ pv.ontimeupdate=()=>{if(!busy&&pv.duration&&isFinite(pv.duration)&&pv.currentTime>=pv.duration-trim){busy=true;play()}};
+ pv.onended=()=>{if(!busy){busy=true;play()}};play()}
+
+function srt(v){const d=effSec();const p=n=>String(n).padStart(2,'0');const f=t=>{const ms=Math.round((t%1)*1000);t=Math.floor(t);return p(Math.floor(t/3600))+':'+p(Math.floor(t%3600/60))+':'+p(t%60)+','+String(ms).padStart(3,'0')};return v.scenes.map((s,i)=>(i+1)+NL+f(i*d)+' --> '+f(i*d+d)+NL+s.voiceover+NL).join(NL)}
+function capcutPlan(v){const d=effSec(),c=S.channel;return ['ПЛАН МОНТАЖА — '+v.titles[v.titleSel||0],'Формат: '+ar()+' · '+(c.quality||'1080p'),'ВАЖНО: у каждого клипа отрежьте последние '+wm()+' сек (вотермарка ГигаЧат)',''].join(NL)+v.scenes.map((s,i)=>String(i+1).padStart(2,'0')+'. '+(s.clip||'(нет клипа)')+'  |  '+(Math.round(i*d*10)/10)+'–'+(Math.round((i*d+d)*10)/10)+' c'+NL+'    Voiceover: '+s.voiceover+NL+'    Перевод: '+(s.voiceover_ru||'')+NL+'    Сцена: '+(s.text_ru||s.text)).join(NL+NL)+NL+NL+'Импорт: CapCut → Новый проект → добавьте клипы по номерам → Текст → Импорт субтитров → subtitles.srt'}
+function sceneCount(c){return Math.max(2,Math.min(30,Math.round((c.lenSec||45)/Math.max(1,(c.clipSec||8)-(c.wmTrim==null?1.5:c.wmTrim)))))}
+render();
+
+/* ================= v4: настоящий монтаж, YouTube, аналитика ================= */
+const rendered={};const thumbs={};let musicUrl=null,musicName='';let ytLoginState=null;
+const inApp=()=>!!window.AYT;
+
+/* ---------- мост JS ↔ Android ---------- */
+const NATQ={};let natN=0;
+function nat(m,a){return new Promise((res,rej)=>{if(!window.AYT)return rej(new Error('Только в Android-приложении'));const id='n'+(++natN);NATQ[id]={res,rej};AYT.postMessage(JSON.stringify({t:'call',id:id,m:m,a:a||{}}))})}
+window.aytReply=function(id,ok,data){const q=NATQ[id];if(!q)return;delete NATQ[id];ok?q.res(data):q.rej(new Error(String(data)))};
+async function http(method,url,headers,body){const r=await nat('http',{method:method,url:url,headers:headers||{},body:body==null?null:body});let j=null;try{j=JSON.parse(r.body)}catch(e){}return{status:r.status,json:j,text:r.body}}
+function form(o){return Object.keys(o).map(k=>encodeURIComponent(k)+'='+encodeURIComponent(o[k])).join('&')}
+
+/* ---------- монтаж в настоящее видео ---------- */
+function outSize(){const q=(S.channel&&S.channel.quality)||'1080p';const h=q==='720p'?720:1080;return ar()==='16:9'?[Math.round(h*16/9),h]:[h,Math.round(h*16/9)]}
+function pickMime(){const L=['video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4','video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'];for(const m of L){try{if(window.MediaRecorder&&MediaRecorder.isTypeSupported(m))return m}catch(e){}}return ''}
+function wrapLines(ctx,text,maxW){const words=String(text||'').split(' ');const lines=[];let line='';for(const w of words){const t=line?line+' '+w:w;if(ctx.measureText(t).width>maxW&&line){lines.push(line);line=w}else line=t}if(line)lines.push(line);return lines.slice(0,3)}
+function drawSubs(ctx,W,H,text,age){if(!text)return;const fs=Math.round(W*(W>H?0.038:0.058));const sc=age<0.18?0.85+age/0.18*0.15:1;
+ ctx.save();ctx.font='800 '+fs+'px Arial, sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';const lines=wrapLines(ctx,text,W*0.84);const lh=fs*1.25;const y0=H*(W>H?0.82:0.72)-(lines.length-1)*lh/2;
+ ctx.translate(W/2,y0);ctx.scale(sc,sc);
+ lines.forEach((l,i)=>{const y=i*lh;const w=ctx.measureText(l).width;ctx.fillStyle='rgba(0,0,0,.55)';const r=fs*0.3,x=-w/2-fs*0.35,yy=y-lh/2+2,ww=w+fs*0.7,hh=lh-4;ctx.beginPath();ctx.moveTo(x+r,yy);ctx.arcTo(x+ww,yy,x+ww,yy+hh,r);ctx.arcTo(x+ww,yy+hh,x,yy+hh,r);ctx.arcTo(x,yy+hh,x,yy,r);ctx.arcTo(x,yy,x+ww,yy,r);ctx.fill();
+  ctx.lineWidth=fs*0.12;ctx.strokeStyle='#000';ctx.strokeText(l,0,y);ctx.fillStyle=i===0?'#fff':'#ffd9dc';ctx.fillText(l,0,y)});ctx.restore()}
+function coverDraw(ctx,vd,W,H){const vw=vd.videoWidth||W,vh=vd.videoHeight||H;const s=Math.max(W/vw,H/vh);const dw=vw*s,dh=vh*s;ctx.drawImage(vd,(W-dw)/2,(H-dh)/2,dw,dh)}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+async function renderVideo(){const v=cur();const urls=v.scenes.map((_,i)=>clips[v.id+'_'+i]);if(urls.some(u=>!u))return toast('Загрузите все клипы (после перезапуска — заново)');
+ const mime=pickMime();if(!mime)return toast('Этот телефон не умеет записывать видео');
+ const [W,H]=outSize();const cv=document.createElement('canvas');cv.width=W;cv.height=H;const ctx=cv.getContext('2d');ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);
+ const pv=$('#pv');if(pv){pv.removeAttribute('src');pv.srcObject=null}
+ const box=$('#rbox');if(box)box.style.display='block';const bar=$('#rbar'),lab=$('#rlab');
+ const AC=window.AudioContext||window.webkitAudioContext;const ac=new AC();const dest=ac.createMediaStreamDestination();
+ const vd=document.createElement('video');vd.playsInline=true;vd.preload='auto';const vsrc=ac.createMediaElementSource(vd);const vg=ac.createGain();vg.gain.value=(S.channel.clipVol==null?0.9:S.channel.clipVol);vsrc.connect(vg);vg.connect(dest);
+ let mu=null;if(musicUrl){mu=new Audio(musicUrl);mu.loop=true;const ms=ac.createMediaElementSource(mu);const mg=ac.createGain();mg.gain.value=(S.channel.musicVol==null?0.25:S.channel.musicVol);ms.connect(mg);mg.connect(dest)}
+ const stream=cv.captureStream(30);dest.stream.getAudioTracks().forEach(t=>stream.addTrack(t));
+ const rec=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:H>=1080||W>=1080?8000000:5000000,audioBitsPerSecond:128000});const chunks=[];rec.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data)};
+ const done=new Promise(r=>rec.onstop=r);
+ let sub='',subT=0,alive=true,fade=0;const t0=performance.now();
+ const loop=()=>{if(!alive)return;ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);if(vd.readyState>=2)coverDraw(ctx,vd,W,H);if(fade>0){ctx.fillStyle='rgba(0,0,0,'+fade+')';ctx.fillRect(0,0,W,H)}drawSubs(ctx,W,H,sub,(performance.now()-subT)/1000);requestAnimationFrame(loop)};
+ const trim=wm();const total=v.scenes.length;
+ try{await ac.resume();rec.start(1000);loop();if(mu)mu.play().catch(()=>{});
+  for(let i=0;i<total;i++){if(lab)lab.textContent='Сцена '+(i+1)+' из '+total;vd.src=urls[i];
+   await new Promise((res,rej)=>{vd.oncanplay=res;vd.onerror=()=>rej(new Error('клип '+(i+1)+' не читается'))});
+   sub=v.scenes[i].voiceover||'';subT=performance.now();await vd.play();
+   const D=isFinite(vd.duration)&&vd.duration>0?vd.duration:(S.channel.clipSec||8);const stopAt=Math.max(0.5,D-trim);
+   while(vd.currentTime<stopAt&&!vd.ended){fade=Math.max(0,1-vd.currentTime/0.15)*(i?1:0);if(vd.currentTime>stopAt-0.15)fade=(vd.currentTime-(stopAt-0.15))/0.15;if(bar)bar.style.width=((i+Math.min(1,vd.currentTime/stopAt))/total*100)+'%';await sleep(30)}
+   vd.pause()}
+  fade=1;await sleep(200);rec.stop();await done}
+ catch(e){alive=false;try{rec.stop()}catch(x){}toast('Ошибка монтажа: '+e.message);return}
+ finally{alive=false;if(mu)mu.pause();try{ac.close()}catch(e){}}
+ const type=mime.split(';')[0];const blob=new Blob(chunks,{type:type});const ext=type==='video/mp4'?'mp4':'webm';
+ rendered[v.id]={blob:blob,url:URL.createObjectURL(blob),ext:ext,type:type,sec:Math.round((performance.now()-t0)/1000)};
+ v.stage=Math.max(v.stage,4);v.videoFile=null;save();render();toast('Видео готово ✓ '+(blob.size/1048576).toFixed(1)+' МБ')}
+
+function blobB64(b){return new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(String(fr.result).split(',')[1]||'');fr.onerror=rej;fr.readAsDataURL(b)})}
+function safeName(v,ext){return (String(vTitle(v)).replace(/[^a-zA-Z0-9]+/g,'_').slice(0,40)||'video')+'_'+v.id+'.'+ext}
+async function storeVideo(v){const r=rendered[v.id];if(!r)throw new Error('сначала соберите видео');if(v.videoFile)return v.videoFile;
+ const name=safeName(v,r.ext);await nat('fileBegin',{name:name});const CH=393216;
+ for(let o=0;o<r.blob.size;o+=CH){await nat('fileChunk',{name:name,b64:await blobB64(r.blob.slice(o,o+CH))});const l=$('#rlab');if(l)l.textContent='Сохраняю '+Math.round(o/r.blob.size*100)+'%'}
+ const p=await nat('fileEnd',{name:name});v.videoFile=p;v.videoMime=r.type;save();return p}
+async function saveVideo(){const v=cur(),r=rendered[v.id];if(!r)return toast('Сначала соберите видео');
+ if(!inApp()){const a=document.createElement('a');a.href=r.url;a.download=safeName(v,r.ext);document.body.appendChild(a);a.click();a.remove();return}
+ try{const p=await storeVideo(v);await nat('share',{path:p,mime:r.type});render()}catch(e){toast('Ошибка: '+e.message)}}
+function pickMusic(){pendingUpload={type:'music'};const f=$('#filepick');f.accept='audio/*';f.value='';f.click()}
+function volSet(k,el){S.channel[k]=+el.value/100;el.style.setProperty('--p',el.value+'%');const o=$('#'+k+'V');if(o)o.textContent=el.value+'%';save()}
+function volSlider(k,label,def){const v=Math.round((S.channel[k]==null?def:S.channel[k])*100);return `<div class="slider" style="margin-top:10px"><div class="stop"><span>${label}</span><span class="val" id="${k}V">${v}%</span></div><input type="range" min="0" max="100" step="5" value="${v}" style="--p:${v}%" oninput="volSet('${k}',this)"></div>`}
+
+function tabEdit(v,c){const miss=v.scenes.filter(s=>!s.clip).length;const r=rendered[v.id];
+ return (miss?`<div class="banner">Не хватает клипов: ${miss}. Загрузите их во вкладке «Сцены».</div>`:'')+
+ `<div class="player ${ar()==='16:9'?'wide':''}"><video id="pv" playsinline controls ${r?`src="${r.url}"`:''}></video><div class="subs" id="subs"></div></div>`+
+ `<div class="glass card" id="rbox" style="display:none"><h3 id="rlab">Собираю…</h3><div class="bar"><i id="rbar" style="width:0%"></i></div><p class="muted" style="margin:8px 0 0">Не сворачивайте приложение — видео записывается в реальном времени.</p></div>`+
+ (r?`<div class="glass-white card"><h3>✅ Видео готово</h3><p style="margin:0 0 10px">${r.ext.toUpperCase()} · ${(r.blob.size/1048576).toFixed(1)} МБ · ${outSize().join('×')}</p><div class="row"><button class="btn primary sm" style="flex:1" onclick="saveVideo()">💾 Сохранить / поделиться</button><button class="btn ghost sm" onclick="setTab('publish')">Далее →</button></div></div>`:'')+
+ `<div class="glass card"><h3>🚫 Вотермарка ГигаЧат</h3><p>Анимация в конце каждого клипа обрезается автоматически.</p>${wmSlider()}<button class="btn white sm block" style="margin-top:10px" onclick="autoWM()">🔍 Найти само по моему клипу</button><p class="muted" style="margin:8px 0 0">Итого в видео от каждого клипа: ${effSec()} сек.</p></div>`+
+ `<div class="glass card"><h3>✂️ Автомонтаж</h3><p>Склейка без вотермарки, плавные переходы, анимированные субтитры из озвучки, музыка, кадр ${ar()} · ${outSize().join('×')}.</p>`+
+  `<button class="btn ghost sm block" onclick="pickMusic()">${musicUrl?'🎵 '+esc(musicName):'🎵 Добавить фоновую музыку (по желанию)'}</button><p class="muted" style="margin:6px 0 0">Бесплатная музыка без авторских прав: фонотека YouTube Studio.</p>`+
+  volSlider('clipVol','🔊 Звук клипов',0.9)+(musicUrl?volSlider('musicVol','🎵 Громкость музыки',0.25):'')+
+  `<button class="btn primary block" style="margin-top:12px" ${miss?'disabled':''} onclick="renderVideo()">${r?'↻ Пересобрать видео':'🎬 Собрать видео'}</button><button class="btn ghost sm block" style="margin-top:8px" ${miss?'disabled':''} onclick="montage()">▶ Быстрый предпросмотр</button></div>`+
+ `<div class="glass card"><h3>Экспорт для CapCut</h3><p>Если хотите доработать вручную: субтитры и план с таймингами.</p><div class="row"><button class="btn white sm" style="flex:1" onclick="download('subtitles.srt',srt(cur()))">⬇ Субтитры .srt</button><button class="btn ghost sm" style="flex:1" onclick="download('capcut-plan.txt',capcutPlan(cur()))">⬇ План монтажа</button></div></div>`}
+
+/* ---------- файлы ---------- */
+function onFile(e){const file=e.target.files[0];if(!file||!pendingUpload)return;
+ if(pendingUpload.type==='test'){onb.testUrl=URL.createObjectURL(file);toast('Тестовый клип загружен');render();return}
+ if(pendingUpload.type==='music'){musicUrl=URL.createObjectURL(file);musicName=file.name;toast('Музыка добавлена');render();return}
+ const v=cur();
+ if(pendingUpload.type==='clip'){const i=pendingUpload.i;clips[v.id+'_'+i]=URL.createObjectURL(file);v.scenes[i].clip=file.name;delete rendered[v.id];v.videoFile=null;if(v.scenes.every(s=>s.clip))v.stage=Math.max(v.stage,3);toast('Клип сцены '+(i+1)+' загружен')}
+ else{v.thumbFile=file.name;const fr=new FileReader();fr.onload=()=>{thumbs[v.id]={b64:String(fr.result).split(',')[1],mime:file.type||'image/jpeg'}};fr.readAsDataURL(file);toast('Обложка загружена')}
+ save();render()}
+
+/* ---------- YouTube: вход ---------- */
+const YT_SCOPE='https://www.googleapis.com/auth/youtube';
+async function ytToken(){const y=S.yt;if(!y||!y.refresh)throw new Error('YouTube не подключён');if(y.access&&y.exp>Date.now()+60000)return y.access;
+ const r=await http('POST','https://oauth2.googleapis.com/token',{'Content-Type':'application/x-www-form-urlencoded'},form({client_id:y.cid,client_secret:y.secret,refresh_token:y.refresh,grant_type:'refresh_token'}));
+ if(r.status!==200||!r.json||!r.json.access_token)throw new Error('вход устарел — войдите снова');y.access=r.json.access_token;y.exp=Date.now()+(r.json.expires_in||3600)*1000;save();return y.access}
+async function ytGet(url){const t=await ytToken();const r=await http('GET',url,{Authorization:'Bearer '+t});if(r.status>=300)throw new Error(((r.json&&r.json.error&&r.json.error.message)||('HTTP '+r.status)));return r.json}
+async function ytLogin(){const cid=($('#ytCid').value||'').trim(),sec=($('#ytSec').value||'').trim();if(!cid||!sec)return toast('Вставьте Client ID и Client secret');
+ S.ytCfg={cid:cid,secret:sec};save();
+ try{const r=await http('POST','https://oauth2.googleapis.com/device/code',{'Content-Type':'application/x-www-form-urlencoded'},form({client_id:cid,scope:YT_SCOPE}));
+  if(r.status!==200)throw new Error((r.json&&(r.json.error_description||r.json.error))||('HTTP '+r.status));
+  ytLoginState={code:r.json.user_code,url:r.json.verification_url||'https://www.google.com/device',dev:r.json.device_code,iv:(r.json.interval||5)*1000,until:Date.now()+(r.json.expires_in||1800)*1000};render();ytPoll()}catch(e){toast('Ошибка: '+e.message)}}
+async function ytPoll(){const st=ytLoginState;if(!st)return;if(Date.now()>st.until){ytLoginState=null;render();return toast('Код истёк — нажмите «Войти» ещё раз')}
+ await sleep(st.iv);if(ytLoginState!==st)return;const c=S.ytCfg;
+ const r=await http('POST','https://oauth2.googleapis.com/token',{'Content-Type':'application/x-www-form-urlencoded'},form({client_id:c.cid,client_secret:c.secret,device_code:st.dev,grant_type:'urn:ietf:params:oauth:grant-type:device_code'}));
+ if(r.json&&r.json.access_token){S.yt={cid:c.cid,secret:c.secret,refresh:r.json.refresh_token,access:r.json.access_token,exp:Date.now()+(r.json.expires_in||3600)*1000};ytLoginState=null;save();toast('YouTube подключён ✓');try{await ytLoadChannel()}catch(e){toast('Канал: '+e.message)}render();return}
+ const er=r.json&&r.json.error;if(er==='slow_down')st.iv+=2000;if(er==='authorization_pending'||er==='slow_down')return ytPoll();ytLoginState=null;render();toast('Вход не удался: '+(er||r.status))}
+async function ytLoadChannel(){const j=await ytGet('https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics,brandingSettings&mine=true');const ch=j.items&&j.items[0];if(!ch)throw new Error('на аккаунте нет канала — создайте его на youtube.com');
+ S.yt.channel={id:ch.id,title:ch.snippet.title,thumb:(ch.snippet.thumbnails&&ch.snippet.thumbnails.default&&ch.snippet.thumbnails.default.url)||'',subs:+ch.statistics.subscriberCount||0,views:+ch.statistics.viewCount||0,videos:+ch.statistics.videoCount||0,hidden:!!ch.statistics.hiddenSubscriberCount};save()}
+function ytLogout(){if(!confirm('Отключить YouTube от приложения?'))return;S.yt=null;S.ytStats=null;save();render()}
+function openUrl(u){if(inApp())nat('open',{url:u}).catch(()=>{});else window.open(u,'_blank')}
+async function ytPushBranding(){try{const t=await ytToken();const j=await ytGet('https://www.googleapis.com/youtube/v3/channels?part=brandingSettings&mine=true');const ch=j.items[0];const b=ch.brandingSettings||{};b.channel=b.channel||{};b.channel.description=S.channel.desc||'';b.channel.keywords=[S.channel.nicheEN||'',(S.channel.styleEN||'').split(',')[0]].filter(Boolean).map(x=>'"'+x+'"').join(' ');b.channel.defaultLanguage='en';
+ const r=await http('PUT','https://www.googleapis.com/youtube/v3/channels?part=brandingSettings',{Authorization:'Bearer '+t,'Content-Type':'application/json'},JSON.stringify({id:ch.id,brandingSettings:b}));if(r.status>=300)throw new Error((r.json&&r.json.error&&r.json.error.message)||r.status);toast('Описание канала обновлено на YouTube ✓')}catch(e){toast('Ошибка: '+e.message)}}
+
+function ytSection(){const y=S.yt;
+ if(!inApp())return `<div class="glass card"><h3>▶️ YouTube</h3><p style="margin:0">Подключение канала, загрузка и аналитика работают в Android-приложении.</p></div>`;
+ if(y&&y.refresh){const ch=y.channel||{};return `<div class="glass-white card"><h3>▶️ YouTube подключён</h3><div class="row" style="gap:12px">${ch.thumb?`<img src="${esc(ch.thumb)}" style="width:48px;height:48px;border-radius:50%">`:''}<div><b>${esc(ch.title||'Канал')}</b><p style="margin:0">${ch.hidden?'подписчики скрыты':(ch.subs||0)+' подписчиков'} · ${ch.videos||0} видео</p></div></div><div class="row" style="margin-top:10px"><button class="btn white sm" style="flex:1" onclick="ytPushBranding()">⬆ Описание канала на YouTube</button><button class="btn ghost sm" onclick="ytLogout()">Выйти</button></div><p class="muted" style="margin:8px 0 0;color:rgba(0,0,0,.55)">Аватарку и название YouTube менять через API не даёт — их ставят в приложении YouTube.</p></div>`}
+ const c=S.ytCfg||{};const st=ytLoginState;
+ return `<div class="glass card"><h3>▶️ Подключить YouTube</h3>`+(st?`<p>1. Откройте страницу Google → 2. введите код → 3. выберите аккаунт канала и разрешите.</p><div class="glass-white card" style="text-align:center"><b style="font-size:30px;letter-spacing:4px">${esc(st.code)}</b></div><div class="row"><button class="btn white sm" style="flex:1" onclick="copy(ytLoginState.code)">📋 Код</button><button class="btn primary sm" style="flex:1" onclick="openUrl(ytLoginState.url)">Открыть Google ↗</button></div><p class="muted" style="margin:8px 0 0">⏳ Жду подтверждения… вернитесь сюда после входа.</p>`
+  :`<p>Один раз: создайте бесплатный ключ в Google Cloud (инструкция в README) и вставьте сюда.</p><input id="ytCid" placeholder="Client ID …apps.googleusercontent.com" value="${esc(c.cid||'')}"><input id="ytSec" type="password" style="margin-top:8px" placeholder="Client secret" value="${esc(c.secret||'')}"><button class="btn primary block" style="margin-top:10px" onclick="ytLogin()">Войти через Google</button>`)+`</div>`}
+
+function vSettings(){const s=S.settings;
+ return `<span class="back" onclick="go('more')">← Ещё</span><h1>Настройки</h1>`+ytSection()+
+ `<div class="glass card"><h3>ИИ для сценариев</h3><div class="opt ${s.ai!=='auto'?'on':''}" onclick="S.settings.ai='manual';save();render()"><h3>🧠 Claude вручную</h3><p style="margin:0">Бесплатно и без ключей: копировать → claude.ai → вставить ответ.</p></div><div class="opt ${s.ai==='auto'?'on':''}" onclick="S.settings.ai='auto';save();render()"><h3>⚡ OpenRouter (free)</h3><p style="margin:0">Автоматически, нужен бесплатный ключ.</p></div>`+
+ (s.ai==='auto'?`<input type="password" placeholder="Ключ OpenRouter sk-or-..." value="${esc(s.key)}" oninput="S.settings.key=this.value;save()"><input style="margin-top:8px" placeholder="Модель (по умолчанию openrouter/free)" value="${esc(s.model||'')}" oninput="S.settings.model=this.value;save()"><p class="muted" style="margin-top:8px">Ключ хранится только на этом устройстве.</p>`:'')+`</div>
+ <div class="glass card"><h3>Данные</h3><p>Всё хранится на устройстве, сервера нет.</p><button class="btn ghost block" onclick="download('autoyoutube-backup.json',JSON.stringify(Object.assign({},S,{yt:null}),null,2))">⬇ Экспорт данных</button><button class="btn block stop" style="margin-top:10px" onclick="resetAll()">Удалить всё</button></div>`}
+
+/* ---------- аналитика ---------- */
+function ymd(d){const p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())}
+function kfmt(n){n=+n||0;return n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?(n/1e3).toFixed(1)+'K':String(Math.round(n))}
+async function ytRefresh(){toast('Загружаю данные YouTube…');try{await ytLoadChannel();const end=new Date();const st=new Date();st.setDate(st.getDate()-28);const A='https://youtubeanalytics.googleapis.com/v2/reports?ids=channel%3D%3DMINE&startDate='+ymd(st)+'&endDate='+ymd(end);
+  const days=await ytGet(A+'&metrics=views,estimatedMinutesWatched,averageViewDuration,subscribersGained,subscribersLost&dimensions=day&sort=day');
+  let top={rows:[]};try{top=await ytGet(A+'&metrics=views,averageViewPercentage,averageViewDuration&dimensions=video&sort=-views&maxResults=5')}catch(e){}
+  const ids=(top.rows||[]).map(r=>r[0]);let names={};if(ids.length){const vj=await ytGet('https://www.googleapis.com/youtube/v3/videos?part=snippet&id='+ids.join(','));(vj.items||[]).forEach(x=>names[x.id]=x.snippet.title)}
+  const rows=days.rows||[];S.ytStats={at:Date.now(),days:rows.map(r=>({d:r[0],v:r[1],m:r[2],avd:r[3],sg:r[4],sl:r[5]})),top:(top.rows||[]).map(r=>({id:r[0],t:names[r[0]]||r[0],v:r[1],pct:r[2],avd:r[3]}))};save();render();toast('Аналитика обновлена ✓')}catch(e){toast('Ошибка: '+e.message)}}
+function insights(s){const out=[];const d=s.days;if(!d.length)return['Пока мало данных — YouTube отдаёт статистику с задержкой 1–2 дня.'];
+ const best=d.reduce((a,b)=>b.v>a.v?b:a);const wd=['воскресенье','понедельник','вторник','среду','четверг','пятницу','субботу'][new Date(best.d+'T12:00').getDay()];out.push('Лучший день: '+best.d+' ('+kfmt(best.v)+' просм.) — попробуйте чаще публиковать в '+wd+'.');
+ const t=s.top;if(t.length){const g=t.reduce((a,b)=>b.pct>a.pct?b:a);out.push('Лучше всего удерживает «'+g.t+'» — '+Math.round(g.pct)+'% досматривают. Делайте похожие хуки.');const avg=t.reduce((a,b)=>a+b.pct,0)/t.length;if(avg<50)out.push('Среднее удержание '+Math.round(avg)+'% — сократите первую сцену и добавьте вопрос в заголовок.')}return out}
+function vAnalytics(){const y=S.yt,s=S.ytStats;
+ if(!y||!y.refresh)return header()+`<h1>Аналитика</h1><div class="glass card"><h3>📊 Подключите YouTube</h3><p>Здесь будут настоящие просмотры, удержание, подписчики и советы по вашему каналу.</p><button class="btn primary block" onclick="go('settings')">Подключить</button></div>`;
+ const ch=y.channel||{};let body='';
+ if(!s)body=`<div class="glass card"><p>Данные ещё не загружены.</p><button class="btn primary block" onclick="ytRefresh()">Загрузить</button></div>`;
+ else{const d=s.days;const sum=k=>d.reduce((a,b)=>a+(+b[k]||0),0);const mx=Math.max(1,...d.map(x=>x.v));const subs=sum('sg')-sum('sl');
+  body=`<div class="metric" style="margin-bottom:12px"><div class="glass"><b>${kfmt(sum('v'))}</b><small>Просмотры · 28 дн</small></div><div class="glass"><b>${kfmt(sum('m')/60)}</b><small>Часов просмотра</small></div><div class="glass"><b>${subs>=0?'+':''}${subs}</b><small>Подписчики</small></div></div>`+
+  `<div class="glass card"><h3>Просмотры по дням</h3><div class="chart">${d.map(x=>`<div style="height:${Math.max(3,x.v/mx*100)}%" title="${x.d}: ${x.v}"></div>`).join('')}</div><div class="row between muted"><span>${d.length?d[0].d.slice(5):''}</span><span>${d.length?d[d.length-1].d.slice(5):''}</span></div></div>`+
+  (s.top.length?`<div class="glass card"><h3>🏆 Топ видео</h3>${s.top.map((t,i)=>`<div class="row between" style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,.08)"><span style="flex:1;color:#fff">${i+1}. ${esc(t.t)}</span><span class="pill">${kfmt(t.v)} · ${Math.round(t.pct)}%</span></div>`).join('')}</div>`:'')+
+  `<div class="glass-white card"><h3>💡 Советы</h3>${insights(s).map(x=>`<p style="margin:0 0 8px">${esc(x)}</p>`).join('')}</div><p class="muted" style="text-align:center">Обновлено ${new Date(s.at).toLocaleString('ru-RU')} · YouTube даёт данные с задержкой 1–2 дня</p>`}
+ return header(`<button class="btn sm ghost" onclick="ytRefresh()">↻</button>`)+`<h1>Аналитика</h1><p>${esc(ch.title||'')} · ${ch.hidden?'':kfmt(ch.subs)+' подписчиков · '}${kfmt(ch.views)} просмотров всего</p>`+body}
+
+/* ---------- публикация ---------- */
+function isoLocal(s){const d=new Date(s);return isNaN(d)?null:d.toISOString()}
+async function approve(){const v=cur();const when=($('#pubAt')&&$('#pubAt').value)||defaultSlot();v.publishAt=when;
+ if(!(S.yt&&S.yt.refresh&&inApp())){v.stage=5;save();render();return toast(inApp()?'Запланировано в календаре. Подключите YouTube для автозагрузки':'Запланировано 🚀')}
+ if(!rendered[v.id]&&!v.videoFile)return toast('Сначала соберите видео во вкладке «Монтаж»');
+ const pa=isoLocal(when);if(!pa||new Date(pa)<new Date(Date.now()+15*60000))return toast('Выберите время минимум через 15 минут');
+ const btn=$('#pubBtn');if(btn){btn.disabled=true;btn.textContent='Загружаю на YouTube…'}
+ try{const path=await storeVideo(v);const t=await ytToken();const title=v.titles[v.titleSel||0]||vTitle(v);
+  const meta={snippet:{title:String(title).slice(0,100),description:String(v.description||'').slice(0,4900),tags:(v.tags||[]).slice(0,15),categoryId:'24',defaultLanguage:'en',defaultAudioLanguage:'en'},status:{privacyStatus:'private',publishAt:pa,selfDeclaredMadeForKids:false,containsSyntheticMedia:v.ai!==false,embeddable:true}};
+  const r=await nat('ytUpload',{token:t,path:path,mime:v.videoMime||'video/mp4',meta:meta});let j=null;try{j=JSON.parse(r.body)}catch(e){}
+  if(r.status>=300||!j||!j.id)throw new Error((j&&j.error&&j.error.message)||('HTTP '+r.status));
+  v.ytId=j.id;v.ytStatus=j.status||{};
+  if(thumbs[v.id]){const tr=await nat('ytThumb',{token:await ytToken(),videoId:j.id,b64:thumbs[v.id].b64,mime:thumbs[v.id].mime});if(tr.status>=300)toast('Обложка не принята: нужен подтверждённый телефон на YouTube')}
+  v.stage=5;save();render();toast('Загружено и запланировано 🚀')}
+ catch(e){toast('Ошибка загрузки: '+e.message);if(btn){btn.disabled=false;btn.textContent='Утвердить и загрузить'}}}
+function tabPublish(v,c){v.checks=v.checks||{};const okAll=CHECKS.every(([k])=>v.checks[k]);const tr=v.titlesRu||[];const ready=v.stage>=4||rendered[v.id];const yt=S.yt&&S.yt.refresh&&inApp();
+ const hint=S.paused?'Сейчас всё остановлено':!ready?'Сначала соберите видео':okAll?(yt?'':'YouTube не подключён — видео попадёт только в календарь'):'Отметьте все пункты чек-листа';
+ return `<div class="glass card"><h3>Заголовок 🇬🇧</h3>${v.titles.map((t,i)=>`<div class="opt ${(v.titleSel||0)===i?'on':''}" style="padding:12px" onclick="cur().titleSel=${i};save();render()">${bi(t,tr[i])}</div>`).join('')}<h3 style="margin-top:12px">Описание 🇬🇧</h3><textarea oninput="cur().description=this.value;save()">${esc(v.description)}</textarea>${v.descriptionRu?`<div class="glass-white card" style="margin:10px 0 0"><b>🇷🇺 Перевод</b><p style="margin:6px 0 0;white-space:pre-line">${esc(v.descriptionRu)}</p></div>`:''}<h3 style="margin-top:12px">Теги</h3><div class="row wrap">${(v.tags||[]).map(t=>`<span class="pill">#${esc(t)}</span>`).join('')}</div></div>
+ <div class="glass card"><h3>🖼️ Обложка</h3><p>Сгенерируйте картинку в ГигаЧат и загрузите сюда (JPG/PNG до 2 МБ).</p><pre class="prompt">${esc(v.thumb)}</pre><div class="row"><button class="btn white sm" style="flex:1" onclick="copy(cur().thumb||'')">📋 Промпт</button><button class="btn ghost sm" style="flex:1" onclick="pickThumb()">${v.thumbFile?'✓ '+esc(v.thumbFile):'⬆ Загрузить'}</button></div></div>
+ <div class="glass card"><h3>🛡️ Чек-лист перед публикацией</h3>${CHECKS.map(([k,t])=>`<label class="check"><input type="checkbox" ${v.checks[k]?'checked':''} onchange="cur().checks['${k}']=this.checked;save();render()"><span>${t}</span></label>`).join('')}<div class="hr"></div><div class="row between"><span>Флаг «ИИ-контент» на YouTube</span><div class="switch ${v.ai!==false?'on':''}" onclick="cur().ai=cur().ai===false;save();render()"></div></div></div>
+ <div class="glass card"><h3>🗓️ Дата публикации</h3><input type="datetime-local" id="pubAt" value="${v.publishAt||defaultSlot()}"><p class="muted" style="margin-top:8px">${yt?'Видео загрузится сейчас, а опубликует его сам YouTube в это время — телефон можно выключить.':'Подключите YouTube в Настройках — тогда приложение само загрузит и запланирует.'}</p></div>`+
+ (v.stage>=5?`<div class="glass-white card"><h3>✅ Запланировано</h3><p style="margin:0">${esc(String(v.publishAt).replace('T',' '))}${v.ytId?' · на YouTube':''}</p>${v.ytId?`<button class="btn white sm block" style="margin-top:10px" onclick="openUrl('https://studio.youtube.com/video/${v.ytId}/edit')">Открыть в YouTube Studio ↗</button>`:''}</div>`+(v.ytId?'':`<button class="btn ghost block" onclick="cur().stage=4;save();render()">Отменить публикацию</button>`)
+ :`<div class="row"><button class="btn ghost" onclick="rejectVideo()">Отклонить</button><button id="pubBtn" class="btn primary" style="flex:1" ${okAll&&ready&&!S.paused?'':'disabled'} onclick="approve()">${yt?'Утвердить и загрузить':'Утвердить и запланировать'}</button></div><p class="muted" style="margin-top:8px;text-align:center">${hint}</p>`+
+  (rendered[v.id]?`<button class="btn ghost sm block" style="margin-top:8px" onclick="saveVideo()">↗ Или отправить в приложение YouTube вручную</button>`:''))}
+
+/* ---------- мост с Android-приложением ---------- */
+(function(){
+ window.aytBack=function(){try{if(S.view==='onb'){if(onb.step>0){onb.step--;render();return true}return false}if(S.view&&S.view!=='studio'){go('studio');return true}}catch(e){}return false};
+ if(!window.AYT)return;
+ window.copy=function(t){AYT.postMessage(JSON.stringify({t:'copy',v:String(t)}));toast('Скопировано ✓')};
+ window.download=function(name,text){AYT.postMessage(JSON.stringify({t:'file',name:name,v:String(text)}));toast('Выберите, куда сохранить файл')};
+})();
+</script>
+</body>
+</html>
