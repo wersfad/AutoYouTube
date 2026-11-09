@@ -214,7 +214,8 @@ function capcutPlan(v){return ['ПЛАН МОНТАЖА — '+v.titles[v.titleSe
 function defaultSlot(){const d=new Date();d.setDate(d.getDate()+1);const p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'T18:00'}
 /* AutoYouTube · экраны */
 function go(view){S.view=view;save();render();window.scrollTo({top:0,behavior:'smooth'})}
-function render(){if(!S.channel)S.view='onb';$('#tabbar').style.display=S.view==='onb'?'none':'flex';
+function render(){try{_render0()}catch(e){console.error(e);if(S.view!=='studio'){S.view='studio';try{save();_render0();return}catch(e2){}}document.getElementById('app').innerHTML='<div class="glass card"><h3>Ошибка запуска</h3><p>'+String(e&&e.message)+'</p><button class="btn block" onclick="localStorage.removeItem(\'cpilot\');location.reload()">Сбросить данные</button></div>'}}
+function _render0(){if(!S.channel)S.view='onb';$('#tabbar').style.display=S.view==='onb'?'none':'flex';
  const map={onb:vOnb,studio:vStudio,ideas:vIdeas,video:vVideo,calendar:vCalendar,analytics:vAnalytics,more:vMore,brand:vBrand,settings:vSettings};
  $('#app').innerHTML=(map[S.view]||vStudio)();renderTabs();if(S.view==='ideas')bindSwipe()}
 function renderTabs(){const t=[['studio','🎛️','Студия'],['ideas','💡','Идеи'],['calendar','🗓️','Календарь'],['analytics','📈','Аналитика'],['more','⚙️','Ещё']];
@@ -656,7 +657,7 @@ render();
 
 /* ================= v4: настоящий монтаж, YouTube, аналитика ================= */
 const rendered={};const thumbs={};let musicUrl=null,musicName='';let ytLoginState=null;
-const inApp=()=>!!window.AYT;
+function inApp(){return !!window.AYT}
 
 /* ---------- мост JS ↔ Android ---------- */
 const NATQ={};let natN=0;
