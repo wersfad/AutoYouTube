@@ -163,12 +163,13 @@ const VOICES=[
 const OR_URL='https://'+'openrouter.ai/api/v1/chat/completions';
 
 let S=load();
+if(S.channel&&S.view==='onb')S.view='studio';if(!S.settings)S.settings={ai:'manual',key:'',model:''};  
 let onb={step:0,d:{niche:'',lang:'Русский',format:'Shorts',freq:3,voice:'flow',style:'Кино',mode:'approve'}};
 const clips={};
 let pendingUpload=null;
 
 function load(){try{const x=JSON.parse(localStorage.getItem('cpilot')||'null');if(x)return x}catch(e){}return{channel:null,videos:[],ideas:[],view:'onb',paused:false,settings:{ai:'manual',key:'',model:''}}}
-function save(){localStorage.setItem('cpilot',JSON.stringify(S))}
+function parseAIJson(raw){let t=String(raw||'').replace(/```(?:json)?/gi,'').replace(/\\\s*\n/g,'\n').replace(/\\$/,'');const a=t.indexOf('{'),b=t.lastIndexOf('}');if(a<0||b<=a)throw new Error('В ответе нет JSON');return JSON.parse(t.slice(a,b+1).replace(/,\s*([}\]])/g,'$1'))} function save(){localStorage.setItem('cpilot',JSON.stringify(S))}
 const $=s=>document.querySelector(s);
 const ESC={'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'};
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>ESC[c]);
@@ -203,7 +204,7 @@ function claudePrompt(v,c){const n=c.format==='Длинные'?10:6;const voice=
  'Также дай 3 варианта заголовка, описание с таймкодами, 10 тегов и промпт обложки thumbnail_prompt (на английском, 16:9, яркий, один крупный объект, без текста).','',
  'Ответь ТОЛЬКО валидным JSON без пояснений, строго в формате:',
  '{"scenes":[{"text":"что происходит","voiceover":"","subject":"","action":"","setting":"","camera":"","lighting":"","audio":"","negative":""}],"titles":["","",""],"description":"","tags":[""],"thumbnail_prompt":""}'].join(NL)}
-function parseAI(txt){const a=txt.indexOf('{'),b=txt.lastIndexOf('}');if(a<0||b<0)throw new Error('JSON не найден');const j=JSON.parse(txt.slice(a,b+1));if(!Array.isArray(j.scenes)||!j.scenes.length)throw new Error('нет сцен');
+function parseAI(txt){const a=txt.indexOf('{'),b=txt.lastIndexOf('}');if(a<0||b<0)throw new Error('JSON не найден');const j=parseAIJson(txt.slice(a,b+1));if(!Array.isArray(j.scenes)||!j.scenes.length)throw new Error('нет сцен');
  j.scenes=j.scenes.map(s=>({text:s.text||'',voiceover:s.voiceover||'',subject:s.subject||'',action:s.action||'',setting:s.setting||'',camera:s.camera||'',lighting:s.lighting||'',audio:s.audio||'',negative:s.negative||'text, watermark, logos, distorted faces'}));return j}
 function applyScript(v,j){v.scenes=j.scenes.map(s=>Object.assign({},s,{clip:null}));v.titles=(j.titles&&j.titles.length?j.titles:[v.title]).slice(0,3);v.titleSel=0;v.description=j.description||'';v.tags=j.tags||[];v.thumb=j.thumbnail_prompt||'';v.stage=Math.max(v.stage,2)}
 function demoPackage(v,c){const en=isEN();return{scenes:demoScenes(v,c),titles:[v.title,v.title+' 😱',(en?'The truth about ':'Правда про ')+c.niche.toLowerCase()],
@@ -416,7 +417,7 @@ function setupAsk(d){const voice=VOICES.find(x=>x.id===d.voice).t;
  'Turn this into prompt material for GigaChat video (Kandinsky).','',
  'Reply ONLY with valid JSON, no explanations:',
  '{"niche_en":"short English niche name, 2-4 words","niche_ru":"короткое название ниши","style_en":"30-50 English words of visual style keywords: look, colors, lighting, camera, mood","style_ru":"перевод style_en","test_scene":"one English test scene for Veo: subject, action, setting, camera, lighting","test_scene_ru":"перевод test_scene","names":[{"en":"","ru":""},{"en":"","ru":""},{"en":"","ru":""}],"desc_en":"YouTube channel description in English, 2-3 sentences","desc_ru":"перевод"}'].join(NL)}
-function importSetup(txt){try{const a=txt.indexOf('{'),b=txt.lastIndexOf('}');if(a<0||b<0)throw new Error('JSON не найден');const j=JSON.parse(txt.slice(a,b+1));if(!j.style_en||!j.niche_en)throw new Error('нет style_en / niche_en');
+function importSetup(txt){try{const a=txt.indexOf('{'),b=txt.lastIndexOf('}');if(a<0||b<0)throw new Error('JSON не найден');const j=parseAIJson(txt.slice(a,b+1));if(!j.style_en||!j.niche_en)throw new Error('нет style_en / niche_en');
  onb.d.ai=j;onb.d.variant=0;onb.d.names=null;onb.d.asIs=0;save();render();toast('Промпт готов ✓')}catch(e){toast('Ошибка: '+e.message)}}
 async function aiCall(prompt){const k=S.settings.key;if(!k)throw new Error('нет ключа в Настройках');
  const r=await fetch(OR_URL,{method:'POST',headers:{'Authorization':'Bearer '+k,'Content-Type':'application/json'},body:JSON.stringify({model:S.settings.model||'openrouter/free',messages:[{role:'user',content:prompt}]})});
@@ -505,7 +506,7 @@ function claudePrompt(v,c){const n=sceneCount(c),cs=c.clipSec||8;const voice={fl
  'Also give 3 titles, a description with timestamps, 10 tags and thumbnail_prompt (16:9, bright, one large subject, no text).','',
  'Reply ONLY with valid JSON, no explanations, strictly in this format:',
  '{"scenes":[{"text":"what happens","text_ru":"","voiceover":"","voiceover_ru":"","subject":"","action":"","setting":"","camera":"","lighting":"","audio":"","negative":""}],"titles":[{"en":"","ru":""},{"en":"","ru":""},{"en":"","ru":""}],"description":"","description_ru":"","tags":[""],"thumbnail_prompt":""}'].join(NL)}
-function parseAI(txt){const a=txt.indexOf('{'),b=txt.lastIndexOf('}');if(a<0||b<0)throw new Error('JSON не найден');const j=JSON.parse(txt.slice(a,b+1));if(!Array.isArray(j.scenes)||!j.scenes.length)throw new Error('нет сцен');
+function parseAI(txt){const a=txt.indexOf('{'),b=txt.lastIndexOf('}');if(a<0||b<0)throw new Error('JSON не найден');const j=parseAIJson(txt.slice(a,b+1));if(!Array.isArray(j.scenes)||!j.scenes.length)throw new Error('нет сцен');
  j.scenes=j.scenes.map(s=>({text:s.text||'',text_ru:s.text_ru||'',voiceover:s.voiceover||'',voiceover_ru:s.voiceover_ru||'',subject:s.subject||'',action:s.action||'',setting:s.setting||'',camera:s.camera||'',lighting:s.lighting||'',audio:s.audio||'',negative:s.negative||'text, watermark, logos, distorted faces'}));return j}
 function applyScript(v,j){const tt=(j.titles&&j.titles.length?j.titles:[{en:v.title,ru:v.titleRu}]).slice(0,3).map(t=>typeof t==='string'?{en:t,ru:''}:{en:t.en||'',ru:t.ru||''});
  v.scenes=j.scenes.map(s=>Object.assign({},s,{clip:null}));v.titles=tt.map(t=>t.en);v.titlesRu=tt.map(t=>t.ru);v.titleSel=0;v.description=j.description||'';v.descriptionRu=j.description_ru||'';v.tags=j.tags||[];v.thumb=j.thumbnail_prompt||'';v.stage=Math.max(v.stage,2)}
@@ -663,7 +664,7 @@ function inApp(){return !!window.AYT}
 const NATQ={};let natN=0;
 function nat(m,a){return new Promise((res,rej)=>{if(!window.AYT)return rej(new Error('Только в Android-приложении'));const id='n'+(++natN);NATQ[id]={res,rej};AYT.postMessage(JSON.stringify({t:'call',id:id,m:m,a:a||{}}))})}
 window.aytReply=function(id,ok,data){const q=NATQ[id];if(!q)return;delete NATQ[id];ok?q.res(data):q.rej(new Error(String(data)))};
-async function http(method,url,headers,body){const r=await nat('http',{method:method,url:url,headers:headers||{},body:body==null?null:body});let j=null;try{j=JSON.parse(r.body)}catch(e){}return{status:r.status,json:j,text:r.body}}
+async function http(method,url,headers,body){const r=await nat('http',{method:method,url:url,headers:headers||{},body:body==null?null:body});let j=null;try{j=parseAIJson(r.body)}catch(e){}return{status:r.status,json:j,text:r.body}}
 function form(o){return Object.keys(o).map(k=>encodeURIComponent(k)+'='+encodeURIComponent(o[k])).join('&')}
 
 /* ---------- монтаж в настоящее видео ---------- */
@@ -806,7 +807,7 @@ async function approve(){const v=cur();const when=($('#pubAt')&&$('#pubAt').valu
  const btn=$('#pubBtn');if(btn){btn.disabled=true;btn.textContent='Загружаю на YouTube…'}
  try{const path=await storeVideo(v);const t=await ytToken();const title=v.titles[v.titleSel||0]||vTitle(v);
   const meta={snippet:{title:String(title).slice(0,100),description:String(v.description||'').slice(0,4900),tags:(v.tags||[]).slice(0,15),categoryId:'24',defaultLanguage:'en',defaultAudioLanguage:'en'},status:{privacyStatus:'private',publishAt:pa,selfDeclaredMadeForKids:false,containsSyntheticMedia:v.ai!==false,embeddable:true}};
-  const r=await nat('ytUpload',{token:t,path:path,mime:v.videoMime||'video/mp4',meta:meta});let j=null;try{j=JSON.parse(r.body)}catch(e){}
+  const r=await nat('ytUpload',{token:t,path:path,mime:v.videoMime||'video/mp4',meta:meta});let j=null;try{j=parseAIJson(r.body)}catch(e){}
   if(r.status>=300||!j||!j.id)throw new Error((j&&j.error&&j.error.message)||('HTTP '+r.status));
   v.ytId=j.id;v.ytStatus=j.status||{};
   if(thumbs[v.id]){const tr=await nat('ytThumb',{token:await ytToken(),videoId:j.id,b64:thumbs[v.id].b64,mime:thumbs[v.id].mime});if(tr.status>=300)toast('Обложка не принята: нужен подтверждённый телефон на YouTube')}
