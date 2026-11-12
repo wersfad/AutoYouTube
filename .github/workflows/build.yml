@@ -13,12 +13,20 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: '21'
 
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
           cache: true
+
+      - name: Verify Java and Clips sources
+        run: |
+          java -version
+          flutter config --jdk-dir="$JAVA_HOME"
+          test -f tools/install_clips.py || { echo "Missing tools/install_clips.py: upload the update contents to the repository root"; exit 1; }
+          test -f assets/clips.js || { echo "Missing assets/clips.js"; exit 1; }
+          test -f native/cpp/bridge.cpp || { echo "Missing native/cpp/bridge.cpp"; exit 1; }
 
       - name: Create Android project files
         run: flutter create --platforms=android --org com.wersfad --project-name autoyoutube .
@@ -30,13 +38,22 @@ jobs:
           sed -i 's/android:label="[^"]*"/android:label="AutoYouTube"/' $M
           cat $M
 
+      - name: Install native Clips module
+        run: python3 tools/install_clips.py
+
+      - name: Fetch pinned speech engine source
+        run: |
+          rm -rf android/app/src/main/cpp/whisper
+          git clone --depth 1 --branch v1.7.6 https://github.com/ggml-org/whisper.cpp.git android/app/src/main/cpp/whisper
+          python3 tools/test_install.py --logic-only
+
       - run: flutter pub get
 
       - name: App icon
         run: dart run flutter_launcher_icons
 
       - name: Build APK
-        run: flutter build apk --release
+        run: flutter build apk --release --target-platform android-arm64
 
       - uses: actions/upload-artifact@v4
         with:
