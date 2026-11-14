@@ -70,7 +70,26 @@ public final class ClipsService extends Service {
   }catch(Throwable e){phase(stopping?"stopped":"error",stopping?"Остановлено. Готовые клипы сохранены.":safeError(e));}
   finally{requestStop();deleteTree(work);work.mkdirs();active=null;if(wake!=null&&wake.isHeld())wake.release();stopForeground(STOP_FOREGROUND_REMOVE);stopSelf();}},"clips-worker");worker.start();return START_NOT_STICKY;
  }
- private String safeError(Throwable e){String t=e.getMessage();if(t==null)t=e.getClass().getSimpleName();return t.length()>900?t.substring(t.length()-900):t;}
+ private String safeError(Throwable e) {
+    android.util.Log.e("AutoYouTubeClips", "Clip processing failed", e);
+
+    Throwable root = e;
+    for (int i = 0; i < 15; i++) {
+        Throwable next = root.getCause();
+        if (next == null && root instanceof ExceptionInInitializerError) {
+            next = ((ExceptionInInitializerError) root).getException();
+        }
+        if (next == null || next == root) break;
+        root = next;
+    }
+
+    String text = root.getClass().getName();
+    String message = root.getMessage();
+    if (message != null && !message.isEmpty()) {
+        text += ": " + message;
+    }
+    return text.length() > 900 ? text.substring(0, 900) : text;
+}
  private Notification notification(String text){Intent stop=new Intent(this,ClipsStopReceiver.class);PendingIntent pi=PendingIntent.getBroadcast(this,0,stop,PendingIntent.FLAG_IMMUTABLE|PendingIntent.FLAG_UPDATE_CURRENT);return new Notification.Builder(this,"clips").setSmallIcon(getApplicationInfo().icon).setContentTitle("AutoYouTube · Нарезки").setContentText(text).setOngoing(true).addAction(new Notification.Action.Builder(null,"Остановить",pi).build()).build();}
  private void phase(String p,String text){synchronized(LOCK){try{state.put("phase",p).put("message",text).put("updatedAt",System.currentTimeMillis());persist();}catch(Exception ignored){}}((NotificationManager)getSystemService(NOTIFICATION_SERVICE)).notify(41,notification(text));}
  private void persist(){getSharedPreferences("clips",0).edit().putString("state",state.toString()).apply();}
