@@ -53,9 +53,9 @@ jobs:
         run: dart run flutter_launcher_icons
 
       - name: Build APK
-        run: flutter build apk --release --target-platform android-arm64
+                run: flutter build apk --debug --target-platform android-arm64
 
       - uses: actions/upload-artifact@v4
         with:
           name: AutoYouTube-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
+                    path: build/app/outputs/flutter-apk/app-debug.apk
