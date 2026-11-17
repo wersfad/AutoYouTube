@@ -109,5 +109,12 @@ if 'AYT_MODEL_FIX' not in s:
  }
 """ + s[b:]
 
+# 6) longer timeouts and more retries for slow / throttled connections
+OLD_T = 'r.addOption("--socket-timeout","20");r.addOption("--retries","3");'
+if '"--socket-timeout","60"' not in s:
+    rep(OLD_T, 'r.addOption("--socket-timeout","60");r.addOption("--retries","10");'
+        'r.addOption("--extractor-retries","5");r.addOption("--fragment-retries","10");'
+        'r.addOption("--retry-sleep","linear=2::10");')
+
 f.write_text(s, encoding='utf-8')
 print('Clips fixes applied')
