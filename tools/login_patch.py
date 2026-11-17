@@ -37,7 +37,7 @@ public final class YoutubeLoginActivity extends Activity {
   web=new WebView(this);cm.setAcceptThirdPartyCookies(web,true);
   WebSettings s=web.getSettings();s.setJavaScriptEnabled(true);s.setDomStorageEnabled(true);
   s.setUserAgentString(s.getUserAgentString().replace("; wv","").replaceAll("Version/\\S+ ",""));
-  web.setWebViewClient(new WebViewClient());
+  web.setWebViewClient(new WebViewClient(){@Override public void onPageFinished(WebView v,String url){if(url!=null&&url.contains("youtube.com")&&!url.contains("accounts."))autoSave();}});
   root.addView(done,new LinearLayout.LayoutParams(-1,-2));
   root.addView(web,new LinearLayout.LayoutParams(-1,0,1f));
   setContentView(root);
@@ -54,10 +54,13 @@ public final class YoutubeLoginActivity extends Activity {
     out.append(".youtube.com\tTRUE\t/\tTRUE\t").append(exp).append('\t').append(p.substring(0,eq)).append('\t').append(p.substring(eq+1)).append('\n');}
    File f=file(this);f.getParentFile().mkdirs();
    try(OutputStream o=new FileOutputStream(f)){o.write(out.toString().getBytes(StandardCharsets.UTF_8));}
-   Toast.makeText(this,"Вход в YouTube сохранён",Toast.LENGTH_SHORT).show();finish();
+   saved=true;Toast.makeText(this,"Вход в YouTube сохранён",Toast.LENGTH_SHORT).show();finish();
   }catch(Exception e){Toast.makeText(this,"Не удалось сохранить вход: "+e.getMessage(),Toast.LENGTH_LONG).show();}
  }
- @Override public void onBackPressed(){if(web!=null&&web.canGoBack())web.goBack();else super.onBackPressed();}
+ private boolean saved=false;
+ private void autoSave(){if(saved)return;CookieManager cm=CookieManager.getInstance();cm.flush();String c=cm.getCookie("https://www.youtube.com");if(c!=null&&(c.contains("SAPISID=")||c.contains("__Secure-3PSID=")))finishLogin();}
+ @Override protected void onPause(){autoSave();super.onPause();}
+ @Override public void onBackPressed(){autoSave();if(!saved)super.onBackPressed();}
 }
 ''', encoding='utf-8')
 
