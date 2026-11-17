@@ -118,3 +118,7 @@ if '"--socket-timeout","60"' not in s:
 
 f.write_text(s, encoding='utf-8')
 print('Clips fixes applied')
+
+# 7) in-app YouTube sign-in (separate script, same folder)
+import subprocess
+subprocess.run([sys.executable, str(Path(__file__).with_name('login_patch.py')), str(root)], check=True)
