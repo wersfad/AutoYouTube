@@ -13,6 +13,8 @@ def rep(old, new):
     assert old in s, 'Anchor not found: ' + old[:60]
     s = s.replace(old, new, 1)
 
+
+def apply_steps():
     # 1) update yt-dlp after init
     rep('YoutubeDL.getInstance().init(this);FFmpeg.getInstance().init(this);',
     'YoutubeDL.getInstance().init(this);FFmpeg.getInstance().init(this);updateYtdlp();')
@@ -30,6 +32,7 @@ def rep(old, new):
     'if(!chunk.isFile())')
 
     # 4) helper methods
+
 helpers = r'''
  // AYT_YTDLP_FIX
  private void updateYtdlp(){
@@ -64,6 +67,7 @@ helpers = r'''
  }
 '''
 if not DONE:
+    apply_steps()
     rep(' private JSONObject info(String url)throws Exception{', helpers + ' private JSONObject info(String url)throws Exception{')
 
 
