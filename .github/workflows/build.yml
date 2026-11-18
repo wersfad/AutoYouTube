@@ -23,6 +23,7 @@ jobs:
           test -f assets/clips.js || { echo "Missing assets/clips.js"; exit 1; }
           test -f native/cpp/bridge.cpp || { echo "Missing native/cpp/bridge.cpp"; exit 1; }
           test -f tools/fix_ytdlp.py || { echo "Missing tools/fix_ytdlp.py"; exit 1; }
+          test -f tools/login_patch.py || { echo "Missing tools/login_patch.py"; exit 1; }
       - name: Create Android project files
         run: flutter create --platforms=android --org com.wersfad --project-name autoyoutube .
       - name: Internet permission and app name
@@ -33,6 +34,8 @@ jobs:
           cat $M
       - name: Fix YouTube 403 in Clips
         run: python3 tools/fix_ytdlp.py
+      - name: Add YouTube sign-in (save login, auto return)
+        run: python3 tools/login_patch.py
       - name: Install native Clips module
         run: python3 tools/install_clips.py
       - name: Fetch pinned speech engine source
