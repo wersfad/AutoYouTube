@@ -209,3 +209,32 @@ patch4(root/'assets/clips.js',[
  ('window.clipsStop=',PREVIEW_JS+'window.clipsStop=',True),
 ],'assets/clips.js','/* AYT_V4 */\n')
 print('[v4] done')
+
+
+# ================= AYT_V5: drop (Music)/[Музыка] captions, webcam position presets =================
+V5='AYT_V5'
+def patch5(path,pairs,name,prefix):
+    s=path.read_text(encoding='utf-8')
+    if V5 in s: print('[v5] already:',name);return
+    for old,new in pairs:
+        assert old in s, f'[v5] anchor not found in {name}: {old[:60]!r}'
+        s=s.replace(old,new,1)
+    path.write_text(prefix+s,encoding='utf-8');print('[v5] patched:',name)
+
+PH='phrases.add(new ClipLogic.Phrase(x.getDouble("start"),x.getDouble("end"),x.getString("text")));'
+PH_NEW=('{String tx=x.getString("text").replaceAll("[\\\\[\\\\(\\\\*][^\\\\]\\\\)\\\\*]{0,40}[\\\\]\\\\)\\\\*]"," ").replaceAll("[♪♫♬]"," ").replaceAll("\\\\s+"," ").trim();'
+        'if(tx.replaceAll("[^\\\\p{L}\\\\p{N}]","").length()>=2)phrases.add(new ClipLogic.Phrase(x.getDouble("start"),x.getDouble("end"),tx));} /* AYT_V5 */')
+patch5(root/'android/app/src/main/java/com/wersfad/autoyoutube/ClipsService.java',[(PH,PH_NEW)],'ClipsService.java','// AYT_V5\n')
+
+CAM_ANCHOR='<div id="clip-camera" hidden><p class="clip-note">'
+CAM_UI=('<div id="clip-camera" hidden><p class="clip-note">Где вебка стримера на экране:</p>'
+ '<div class="clip-grid" style="grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">'
+ '<button type="button" class="btn ghost sm" onclick="clipsCam(0,0)">↖ Слева сверху</button>'
+ '<button type="button" class="btn ghost sm" onclick="clipsCam(1,0)">↗ Справа сверху</button>'
+ '<button type="button" class="btn ghost sm" onclick="clipsCam(0,1)">↙ Слева снизу</button>'
+ '<button type="button" class="btn ghost sm" onclick="clipsCam(1,1)">↘ Справа снизу</button></div><p class="clip-note">')
+CAM_JS=r"""/* AYT_V5 */
+window.clipsCam=function(r,b){const w=25,h=28,set=(k,v)=>{const el=document.getElementById(k);if(el)el.value=v;};set('cameraW',w);set('cameraH',h);set('cameraX',r?100-w:0);set('cameraY',b?100-h:0);toast('Область вебки выставлена. При нужде подправьте цифры.');};
+"""
+patch5(root/'assets/clips.js',[(CAM_ANCHOR,CAM_UI),('window.clipsStop=',CAM_JS+'window.clipsStop=')],'assets/clips.js','/* AYT_V5 */\n')
+print('[v5] done')
