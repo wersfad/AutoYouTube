@@ -144,4 +144,14 @@ patch2(root/'assets/clips.js',[
  (SHARE_BTN,"""<button type="button" class="btn primary block" style="margin-bottom:8px" onclick="clipsSave('${e(c.id)}')">⬇ Скачать в галерею</button>"""+SHARE_BTN,1),
  ('window.clipsStop=',SAVE_JS+'window.clipsStop=',1),
 ],[],'assets/clips.js')
+
+# AYT_EXTRAS: speech engine accepts 5-minute windows (was capped at 240 s) and up to 8 threads
+cpp=root/'android/app/src/main/cpp/bridge.cpp'
+assert cpp.exists(),'[extras] bridge.cpp not installed'
+cs=cpp.read_text(encoding='utf-8')
+if 'AYT_EXTRAS' not in cs:
+    assert 'bytes>16000*4*240' in cs,'[extras] PCM limit anchor not found in bridge.cpp'
+    cs=cs.replace('bytes>16000*4*240','bytes>16000*4*420',1)
+    cs=cs.replace('std::min(4,int(threads))','std::min(8,int(threads))',1)
+    cpp.write_text('// AYT_EXTRAS\n'+cs,encoding='utf-8');print('[extras] patched: bridge.cpp')
 print('[extras] done')
