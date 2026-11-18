@@ -155,3 +155,57 @@ if 'AYT_EXTRAS' not in cs:
     cs=cs.replace('std::min(4,int(threads))','std::min(8,int(threads))',1)
     cpp.write_text('// AYT_EXTRAS\n'+cs,encoding='utf-8');print('[extras] patched: bridge.cpp')
 print('[extras] done')
+
+
+# ================= AYT_V4: faster speech, visible progress, subtitle previews =================
+V4='AYT_V4'
+def patch4(path,pairs,name,prefix=''):
+    s=path.read_text(encoding='utf-8')
+    if V4 in s: print('[v4] already:',name);return
+    for old,new,req in pairs:
+        if old in s: s=s.replace(old,new,1)
+        elif req: raise AssertionError(f'[v4] anchor not found in {name}: {old[:60]!r}')
+        else: print('[v4] optional skipped in',name,':',old[:50])
+    path.write_text(prefix+s,encoding='utf-8');print('[v4] patched:',name)
+
+# Whisper: greedy without temperature fallback (big speedup on phones)
+patch4(root/'android/app/src/main/cpp/bridge.cpp',[
+ ('p.no_context=true;','p.no_context=true;p.greedy.best_of=1;p.temperature_inc=0.0f;p.suppress_blank=true;',True),
+],'bridge.cpp','// AYT_V4\n')
+
+# Java: shorter windows (first clips sooner), 4 big-core threads, progress text with time range
+patch4(root/'android/app/src/main/java/com/wersfad/autoyoutube/ClipsService.java',[
+ ('WINDOW=300,OVERLAP=15','WINDOW=180,OVERLAP=10',False),
+ ('Math.max(2,Math.min(8,Runtime.getRuntime().availableProcessors()))','Math.max(2,Math.min(4,Runtime.getRuntime().availableProcessors()))',False),
+ ('phase("rendering","Распознаю речь и ищу кандидатов на нарезку");',
+  'phase("rendering","Распознаю речь "+String.format(Locale.US,"%d:%02d–%d:%02d",(int)origin/60,(int)origin%60,(int)(origin+duration)/60,(int)(origin+duration)%60)+" · ищу моменты"); /* AYT_V4 */',False),
+],'ClipsService.java','// AYT_V4\n')
+
+PREVIEW_JS=r"""/* AYT_V4 subtitle previews */
+(function(){
+const O='-2px -2px 0 #111,2px -2px 0 #111,-2px 2px 0 #111,2px 2px 0 #111,0 2px 3px rgba(0,0,0,.6)';
+const ST={classic:{n:'Классика',c:'color:#fff;font-weight:800;text-shadow:'+O},
+ yellow:{n:'Жёлтые',c:'color:#ffe600;font-weight:900;text-shadow:'+O},
+ box:{n:'Плашка',c:'color:#fff;font-weight:800;background:rgba(0,0,0,.7);padding:1px 6px;border-radius:4px'},
+ neon:{n:'Неон',c:'color:#00ffff;font-weight:900;text-shadow:-1px -1px 0 #ff00ff,1px 1px 0 #ff00ff,0 0 6px #ff00ff,0 0 12px #ff00ff'},
+ center:{n:'По центру',c:'color:#fff;font-weight:900;text-shadow:'+O,mid:1},
+ minimal:{n:'Минимал',c:'color:#fff;font-weight:500;text-shadow:1px 2px 4px rgba(0,0,0,.85)'}};
+const SZ={s:{n:'S',px:38},m:{n:'M',px:48},l:{n:'L',px:62},xl:{n:'XL',px:76}};
+const CSS='<style id="ayt-sp-css">.ayt-sp{display:flex;gap:12px;align-items:flex-start;margin:10px 0 14px}.ayt-sp-frame{flex:0 0 120px;height:213px;border-radius:14px;position:relative;overflow:hidden;background:linear-gradient(160deg,#5b6b8c 0%,#2a2f45 55%,#151826 100%);box-shadow:0 4px 14px rgba(0,0,0,.35)}.ayt-sp-frame:before{content:"";position:absolute;left:18%;top:22%;width:64%;height:34%;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.18),transparent 70%)}.ayt-sp-line{position:absolute;left:6px;right:6px;bottom:20%;text-align:center;line-height:1.15;font-family:Arial,Roboto,sans-serif}.ayt-sp-line.mid{bottom:auto;top:50%;transform:translateY(-50%)}.ayt-sp-side{flex:1;min-width:0}.ayt-sp-lab{font-size:12px;opacity:.75;margin:0 0 6px}.ayt-sp-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}.ayt-sp-tiles.sz{grid-template-columns:repeat(4,1fr)}.ayt-sp-t{border:2px solid transparent;border-radius:10px;padding:8px 2px 4px;background:linear-gradient(135deg,#3a4160,#1b1e2b);color:#fff;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer}.ayt-sp-t small{font-size:10px;opacity:.8;font-weight:500;text-shadow:none;color:#fff}.ayt-sp-t.on{border-color:#ff4d4d;box-shadow:0 0 0 2px rgba(255,77,77,.25)}</style>';
+function setup(){const box=document.getElementById('clip-sub-preview'),ss=document.getElementById('clip-sub-style'),sz=document.getElementById('clip-sub-size');if(!box||!ss||!sz||box.dataset.ok)return;box.dataset.ok=1;if(!document.getElementById('ayt-sp-css'))document.head.insertAdjacentHTML('beforeend',CSS);ss.closest('.clip-grid').style.display='none';
+ function render(){const st=ST[ss.value]||ST.classic,z=SZ[sz.value]||SZ.m;
+  box.innerHTML='<div class="ayt-sp"><div class="ayt-sp-frame"><div class="ayt-sp-line'+(st.mid?' mid':'')+'"><span style="'+st.c+';font-size:'+(z.px/6).toFixed(1)+'px">Вот это был момент!</span></div></div><div class="ayt-sp-side"><p class="ayt-sp-lab">Стиль субтитров</p><div class="ayt-sp-tiles">'+
+  Object.keys(ST).map(k=>'<button type="button" class="ayt-sp-t'+(k===ss.value?' on':'')+'" data-st="'+k+'"><span style="'+ST[k].c+';font-size:13px">Текст</span><small>'+ST[k].n+'</small></button>').join('')+
+  '</div><p class="ayt-sp-lab">Размер</p><div class="ayt-sp-tiles sz">'+
+  Object.keys(SZ).map(k=>'<button type="button" class="ayt-sp-t'+(k===sz.value?' on':'')+'" data-sz="'+k+'"><span style="'+st.c+';font-size:'+(8+SZ[k].px/6).toFixed(0)+'px">Аа</span><small>'+SZ[k].n+'</small></button>').join('')+'</div></div></div>';
+  box.querySelectorAll('[data-st]').forEach(b=>b.onclick=()=>{ss.value=b.dataset.st;if(ss.onchange)ss.onchange();render();});
+  box.querySelectorAll('[data-sz]').forEach(b=>b.onclick=()=>{sz.value=b.dataset.sz;if(sz.onchange)sz.onchange();render();});}
+ render();setTimeout(render,900);}
+setInterval(setup,500);
+})();
+"""
+patch4(root/'assets/clips.js',[
+ ('\n <label for="clip-language">','<div id="clip-sub-preview"></div>\n <label for="clip-language">',True),
+ ('window.clipsStop=',PREVIEW_JS+'window.clipsStop=',True),
+],'assets/clips.js','/* AYT_V4 */\n')
+print('[v4] done')
