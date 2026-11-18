@@ -39,7 +39,7 @@ jobs:
       - name: Install native Clips module
         run: python3 tools/install_clips.py
       - name: Gallery source for Clips
-        run: python3 tools/gallery_patch.py
+        run: python3 gallery_patch.py
       - name: Fetch pinned speech engine source
         run: |
           rm -rf android/app/src/main/cpp/whisper
