@@ -38,12 +38,14 @@ jobs:
         run: python3 tools/login_patch.py
       - name: Install native Clips module
         run: python3 tools/install_clips.py
+      - name: Gallery source for Clips
+        run: python3 tools/gallery_patch.py
       - name: Fetch pinned speech engine source
         run: |
           rm -rf android/app/src/main/cpp/whisper
           git clone --depth 1 --branch v1.7.6 https://github.com/ggml-org/whisper.cpp.git android/app/src/main/cpp/whisper
           python3 tools/test_install.py --logic-only
-      - run: flutter pub get
+           - run: flutter pub get
       - name: App icon
         run: dart run flutter_launcher_icons
       - name: Build APK
