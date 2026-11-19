@@ -251,3 +251,80 @@ if 'AYT_V6' not in s6:
     s6=s6.replace(old,new,1)
     svc6.write_text('// AYT_V6\n'+s6,encoding='utf-8');print('[v6] patched: ClipsService.java')
 print('[v6] done')
+
+
+# ================= AYT_V7: SYNTX AI opened inside the app (in-app browser, user's own account) =================
+nd=root/'lib/native.dart';s7=nd.read_text(encoding='utf-8')
+if 'AYT_V7' not in s7:
+    old="case 'open':"
+    assert old in s7,'[v7] open anchor not found in native.dart'
+    s7=s7.replace(old,"case 'openInApp': // AYT_V7\n        await launchUrl(Uri.parse(a['url'].toString()), mode: LaunchMode.inAppBrowserView);\n        return true;\n      "+old,1)
+    nd.write_text(s7,encoding='utf-8');print('[v7] patched: native.dart')
+cj=root/'assets/clips.js';c7=cj.read_text(encoding='utf-8')
+if 'AYT_V7' not in c7:
+    anchor='<div id="clip-status" aria-live="polite"></div>'
+    assert anchor in c7,'[v7] status anchor not found in clips.js'
+    card=('<section class="glass card clip-model"><div><h3>✨ Нарезка через SYNTX AI</h3><p>Откроется внутри приложения. Нужен ваш аккаунт SYNTX и их токены. Задача скопируется — просто вставьте её.</p></div>'
+          '<button type="button" class="btn ghost sm" onclick="clipsSyntx()">Открыть</button></section>\n ')
+    c7=c7.replace(anchor,card+anchor,1)
+    js=r"""/* AYT_V7 */
+window.clipsSyntx=async function(){const n=(document.getElementById('clip-count')||{}).value||10,l=(document.getElementById('clip-length')||{}).value||45;
+ const prompt='Сделай '+n+' вертикальных нарезок 9:16 по ~'+l+' секунд с субтитрами. Бери только самые крутые и интересные моменты: яркие реакции, смешное, неожиданное, кульминации. Без скучных и проходных частей.';
+ try{await navigator.clipboard.writeText(prompt);toast('Задача скопирована — вставьте её в SYNTX');}catch(e){}
+ try{await native('openInApp',{url:'https://syntx.ai/ru'});}catch(err){toast(err.message||String(err));}};
+"""
+    c7=c7.replace('window.clipsStop=',js+'window.clipsStop=',1)
+    cj.write_text('/* AYT_V7 */\n'+c7,encoding='utf-8');print('[v7] patched: clips.js')
+print('[v7] done')
+
+
+# ================= AYT_V8: smarter moments, layout templates, sharp webcam, streamer voice, faster =================
+import base64 as _b64
+APP=root/'android/app/src/main/java/com/wersfad/autoyoutube'
+(APP/'ClipLogic.java').write_text(_b64.b64decode("cGFja2FnZSBjb20ud2Vyc2ZhZC5hdXRveW91dHViZTsKaW1wb3J0IGphdmEudXRpbC4qOwoKLyoqIEFZVF9WODogbW9tZW50IHNlbGVjdGlvbiB0dW5lZCBmb3Igc3RyZWFtczogbG91ZCBidXJzdHMsIHN1ZGRlbiBqdW1wcywgZmFzdCBlbW90aW9uYWwgc3BlZWNoLCByZWFjdGlvbiB3b3JkcywgaG9vay1maXJzdCB3aW5kb3dzLiAqLwpwdWJsaWMgZmluYWwgY2xhc3MgQ2xpcExvZ2ljIHsKIHB1YmxpYyBzdGF0aWMgZmluYWwgY2xhc3MgUGhyYXNlIHsKICBwdWJsaWMgZmluYWwgZG91YmxlIHN0YXJ0LGVuZDsgcHVibGljIGZpbmFsIFN0cmluZyB0ZXh0OwogIHB1YmxpYyBQaHJhc2UoZG91YmxlIHMsZG91YmxlIGUsU3RyaW5nIHQpe3N0YXJ0PXM7ZW5kPWU7dGV4dD10O30KIH0KIHB1YmxpYyBzdGF0aWMgZmluYWwgY2xhc3MgTW9tZW50IHsKICBwdWJsaWMgZmluYWwgZG91YmxlIHN0YXJ0LGVuZCxzY29yZTsgcHVibGljIGZpbmFsIFN0cmluZyByZWFzb247CiAgTW9tZW50KGRvdWJsZSBzLGRvdWJsZSBlLGRvdWJsZSBxLFN0cmluZyByKXtzdGFydD1zO2VuZD1lO3Njb3JlPXE7cmVhc29uPXI7fQogfQogcHVibGljIHN0YXRpYyBib29sZWFuIG92ZXJsYXBzKGRvdWJsZSBhLGRvdWJsZSBiLGRvdWJsZSBjLGRvdWJsZSBkKXtyZXR1cm4gTWF0aC5tYXgoYSxjKTxNYXRoLm1pbihiLGQpO30KIHB1YmxpYyBzdGF0aWMgYm9vbGVhbiBhbGxvd2VkSG9zdChTdHJpbmcgaG9zdCl7cmV0dXJuIGhvc3QhPW51bGwmJkFycmF5cy5hc0xpc3QoInlvdXR1YmUuY29tIiwid3d3LnlvdXR1YmUuY29tIiwibS55b3V0dWJlLmNvbSIsInlvdXR1LmJlIiwidHdpdGNoLnR2Iiwid3d3LnR3aXRjaC50diIsIm0udHdpdGNoLnR2IikuY29udGFpbnMoaG9zdC50b0xvd2VyQ2FzZShMb2NhbGUuUk9PVCkpO30KIHByaXZhdGUgc3RhdGljIGZpbmFsIFN0cmluZ1tdIFNUUk9ORz17ItC90LUg0LzQvtC20LXRgiDQsdGL0YLRjCIsItC+0YTQuNCz0LXRgtGMIiwi0L7RhdGA0LXQvdC10YLRjCIsItC+0YXRg9C10YLRjCIsItC/0LjQt9C00LXRhiIsItC10LHQsNGC0YwiLCLQvdC40YXRg9GPIiwi0LDRhdGD0LXRgtGMIiwi0LTQsCDQu9Cw0LTQvdC+Iiwi0LrQsNC6INGC0LDQuiIsItGH0YLQviDQt9CwIiwi0L3QtdCy0LXRgNC+0Y/RgtC90L4iLCLQutCw0L/QtdGGIiwi0LbQtdGB0YLRjCIsItCy0LDRgyIsItC+0LPQviIsItC+0LHQsNC70LTQtdGC0YwiLCLQv9C+0LHQtdC00LAiLCLQstGL0LjQs9GA0LDQuyIsItCy0YvQuNCz0YDQsNC70LgiLCLQv9GA0L7QuNCz0YDQsNC7Iiwi0LrQu9Cw0YLRhyIsItC40LzQsdCwIiwi0LLQsNC90YjQvtGCIiwibm8gd2F5Iiwid2hhdCB0aGUiLCJvaCBteSBnb2QiLCJvbWciLCJsZXQncyBnbyIsImxldHMgZ28iLCJpbnNhbmUiLCJ1bmJlbGlldmFibGUiLCJjbHV0Y2giLCJob2x5Iiwid3RmIn07CiBwcml2YXRlIHN0YXRpYyBmaW5hbCBTdHJpbmdbXSBNRURJVU09eyLRgdC80L7RgtGA0LgiLCLRgdC80L7RgtGA0LjRgtC1Iiwi0LHQu9C40L0iLCLQsdC70Y8iLCLQvdC40YTQuNCz0LAiLCLQtNCw0LLQsNC5Iiwi0L/QvtCz0L3QsNC70LgiLCLRgdGC0L7QvyIsItC/0L7QtNC+0LbQtNC4Iiwi0L3QtdGCINC90LXRgiIsItC00LAg0LTQsCIsItC60YDQsNGB0LDQstCwIiwi0LrRgNCw0YHQuNCy0L4iLCLQutGA0LjQvdC2Iiwi0YDQvtGE0LsiLCLQu9C+0LsiLCLQutC10LoiLCLQsNGF0LDRhSIsItGF0LDRhdCwIiwi0YXQsNGFIiwi0YHQvNC10YjQvdC+Iiwi0YHRgtGA0LDRiNC90L4iLCLQv9C+0LzQvtCz0LjRgtC1Iiwi0LHQtdCz0LgiLCLQsdC10LbQuNC8Iiwi0YPQsdC40LvQuCIsItGD0LHQuNC7Iiwi0YPQvNC10YAiLCLQv9C+0YHQu9C10LTQvdC40LkiLCLQs9C+0YHQv9C+0LTQuCIsItCx0L7QttC1Iiwi0YPRgNCwIiwieWVzIiwibm8gbm8iLCJydW4iLCJkdWRlIiwiYnJvIiwiY3JhenkiLCJmdW5ueSJ9Owogc3RhdGljIGRvdWJsZSBrZXlTY29yZShTdHJpbmcgdCl7ZG91YmxlIGs9MDtmb3IoU3RyaW5nIHc6U1RST05HKWlmKHQuY29udGFpbnModykpays9Mjtmb3IoU3RyaW5nIHc6TUVESVVNKWlmKHQuY29udGFpbnModykpays9MTtpZih0Lm1hdGNoZXMoIi4qKNGF0LApezIsfS4qIil8fHQubWF0Y2hlcygiLiooYWh8aGEpezIsfS4qIikpays9MS41O3JldHVybiBNYXRoLm1pbig2LGspO30KIHN0YXRpYyBpbnQgd29yZHMoU3RyaW5nIHQpe2ludCBjPTA7Zm9yKFN0cmluZyB3OnQudHJpbSgpLnNwbGl0KCJcXHMrIikpaWYody5yZXBsYWNlQWxsKCJbXlxccHtMfVxccHtOfV0iLCIiKS5sZW5ndGgoKT4wKWMrKztyZXR1cm4gYzt9CiBzdGF0aWMgU3RyaW5nIGN1dChTdHJpbmcgdCl7dD10LnJlcGxhY2VBbGwoIlxccysiLCIgIikudHJpbSgpO3JldHVybiB0Lmxlbmd0aCgpPjQwP3Quc3Vic3RyaW5nKDAsNDApKyLigKYiOnQ7fQogcHVibGljIHN0YXRpYyBMaXN0PE1vbWVudD4gc2VsZWN0KExpc3Q8UGhyYXNlPiBwaHJhc2VzLGZsb2F0W10gYXVkaW8saW50IHJhdGUsZG91YmxlIGR1cmF0aW9uLGRvdWJsZSBsZW5ndGgsYm9vbGVhbiBzdHJpY3QpewogIExpc3Q8TW9tZW50PiBvdXQ9bmV3IEFycmF5TGlzdDw+KCk7CiAgaWYoZHVyYXRpb248TWF0aC5taW4oMTIsbGVuZ3RoKXx8YXVkaW8ubGVuZ3RoPT0wKXJldHVybiBvdXQ7CiAgaW50IG49KGludClNYXRoLmNlaWwoYXVkaW8ubGVuZ3RoLyhkb3VibGUpcmF0ZSk7ZG91YmxlW10gcm1zPW5ldyBkb3VibGVbbl07CiAgZm9yKGludCBpPTA7aTxhdWRpby5sZW5ndGg7aSsrKXtkb3VibGUgdj1hdWRpb1tpXTtybXNbaS9yYXRlXSs9dip2O30KICBmb3IoaW50IGk9MDtpPG47aSsrKXtpbnQgY250PU1hdGgubWluKHJhdGUsYXVkaW8ubGVuZ3RoLWkqcmF0ZSk7cm1zW2ldPU1hdGguc3FydChybXNbaV0vTWF0aC5tYXgoMSxjbnQpKTt9CiAgZG91YmxlW10gc289cm1zLmNsb25lKCk7QXJyYXlzLnNvcnQoc28pO2RvdWJsZSBtZWQ9TWF0aC5tYXgoMWUtNCxzb1tzby5sZW5ndGgvMl0pLHA5MD1zb1tNYXRoLm1pbihzby5sZW5ndGgtMSwoaW50KShzby5sZW5ndGgqMC45KSldOwogIGRvdWJsZSB0b3RhbFdvcmRzPTA7Zm9yKFBocmFzZSBwOnBocmFzZXMpdG90YWxXb3Jkcys9d29yZHMocC50ZXh0KTtkb3VibGUgYXZnUmF0ZT10b3RhbFdvcmRzL01hdGgubWF4KDEsZHVyYXRpb24pOwogIGRvdWJsZVtdIGV4PW5ldyBkb3VibGVbbl07CiAgZm9yKGludCBpPTA7aTxuO2krKyl7ZG91YmxlIGxvdWQ9cm1zW2ldL21lZDtkb3VibGUganVtcD1pPjA/TWF0aC5tYXgoMCxybXNbaV0tcm1zW2ktMV0pL21lZDowO2V4W2ldPU1hdGgubWF4KDAsbG91ZC0xLjQpKjEuMitNYXRoLm1pbigzLGp1bXApKjAuODt9CiAgZm9yKFBocmFzZSBwOnBocmFzZXMpe1N0cmluZyB0PXAudGV4dC50b0xvd2VyQ2FzZShMb2NhbGUuUk9PVCk7ZG91YmxlIGR1cj1NYXRoLm1heCguMyxwLmVuZC1wLnN0YXJ0KTtkb3VibGUgcj13b3Jkcyh0KS9kdXI7CiAgIGRvdWJsZSBmYXN0PWF2Z1JhdGU+MD9NYXRoLm1heCgwLHIvTWF0aC5tYXgoMS41LGF2Z1JhdGUpLTEuMik6MDsKICAgZG91YmxlIGFkZD1rZXlTY29yZSh0KSoxLjUrTWF0aC5taW4oMixmYXN0KSsodC5jb250YWlucygiISIpPzAuNjowKTsKICAgZm9yKGludCBzPU1hdGgubWF4KDAsKGludClwLnN0YXJ0KTtzPD1NYXRoLm1pbihuLTEsKGludClwLmVuZCk7cysrKWV4W3NdKz1hZGQ7fQogIGRvdWJsZVtdIHNtPW5ldyBkb3VibGVbbl07Zm9yKGludCBpPTA7aTxuO2krKyl7ZG91YmxlIHM9MDtpbnQgYz0wO2ZvcihpbnQgaj1NYXRoLm1heCgwLGktMSk7ajw9TWF0aC5taW4obi0xLGkrMSk7aisrKXtzKz1leFtqXTtjKys7fXNtW2ldPXMvYzt9CiAgTGlzdDxNb21lbnQ+IGNhbmQ9bmV3IEFycmF5TGlzdDw+KCk7CiAgZm9yKGludCBpPTA7aTxuO2krKyl7CiAgIGlmKHNtW2ldPD0wKWNvbnRpbnVlO2Jvb2xlYW4gbG9jYWw9dHJ1ZTtmb3IoaW50IGo9TWF0aC5tYXgoMCxpLTQpO2o8PU1hdGgubWluKG4tMSxpKzQpO2orKylpZihzbVtqXT5zbVtpXSlsb2NhbD1mYWxzZTtpZighbG9jYWwpY29udGludWU7CiAgIGRvdWJsZSBzPU1hdGgubWF4KDAsaS1sZW5ndGgqMC4zNSksZT1NYXRoLm1pbihkdXJhdGlvbixzK2xlbmd0aCk7cz1NYXRoLm1heCgwLGUtbGVuZ3RoKTsKICAgZm9yKFBocmFzZSBwOnBocmFzZXMpe2lmKHAuc3RhcnQ8cyYmcC5lbmQ+cyYmcy1wLnN0YXJ0PDQpcz1wLnN0YXJ0O2lmKHAuc3RhcnQ8ZSYmcC5lbmQ+ZSYmcC5lbmQtZTw0KWU9TWF0aC5taW4oZHVyYXRpb24scC5lbmQpO30KICAgaWYoZS1zPDEyKWNvbnRpbnVlOwogICBkb3VibGUgc3VtPTAscXVpZXQ9MDtpbnQgc2Vjcz0wO2ZvcihpbnQgaj0oaW50KXM7ajxNYXRoLm1pbihuLChpbnQpTWF0aC5jZWlsKGUpKTtqKyspe3N1bSs9c21bal07aWYocm1zW2pdPG1lZCowLjUpcXVpZXQrKztzZWNzKys7fQogICBpbnQgdz0wO1N0cmluZyBoaXQ9bnVsbDtmb3IoUGhyYXNlIHA6cGhyYXNlcylpZihvdmVybGFwcyhzLGUscC5zdGFydCxwLmVuZCkpe3crPXdvcmRzKHAudGV4dCk7aWYoaGl0PT1udWxsJiZrZXlTY29yZShwLnRleHQudG9Mb3dlckNhc2UoTG9jYWxlLlJPT1QpKT49MiloaXQ9cC50ZXh0O30KICAgZG91YmxlIHNjb3JlPXNtW2ldKjIrc3VtL01hdGgubWF4KDEsc2VjcykqMy0ocXVpZXQvTWF0aC5tYXgoMSxzZWNzKSkqMysodz49OD8wLjg6LTEuNSk7CiAgIFN0cmluZyByZWFzb249aGl0IT1udWxsPyLQrdC80L7RhtC40L7QvdCw0LvRjNC90LDRjyDRgNC10LDQutGG0LjRjzogwqsiK2N1dChoaXQpKyLCuyI6KHJtc1tpXT49cDkwPyLQk9GA0L7QvNC60LjQuSDQstGB0L/Qu9C10YHQuiAvINC60YDQuNC6Ijoi0JHRi9GB0YLRgNCw0Y8g0Y3QvNC+0YbQuNC+0L3QsNC70YzQvdCw0Y8g0YDQtdGH0YwiKTsKICAgY2FuZC5hZGQobmV3IE1vbWVudChzLGUsc2NvcmUscmVhc29uKSk7CiAgfQogIGNhbmQuc29ydCgoYSxiKS0+RG91YmxlLmNvbXBhcmUoYi5zY29yZSxhLnNjb3JlKSk7CiAgZG91YmxlIHRocj1zdHJpY3Q/NC41OjIuMjtpbnQgbWF4PXN0cmljdD8yOjM7CiAgZm9yKE1vbWVudCBtOmNhbmQpe2lmKG0uc2NvcmU8dGhyKWJyZWFrO2Jvb2xlYW4gZHVwPWZhbHNlO2ZvcihNb21lbnQgbzpvdXQpaWYob3ZlcmxhcHMobS5zdGFydCxtLmVuZCxvLnN0YXJ0LG8uZW5kKSlkdXA9dHJ1ZTtpZighZHVwKW91dC5hZGQobSk7aWYob3V0LnNpemUoKT49bWF4KWJyZWFrO30KICBpZihvdXQuaXNFbXB0eSgpJiYhc3RyaWN0JiYhY2FuZC5pc0VtcHR5KCkmJmNhbmQuZ2V0KDApLnNjb3JlPjEuMClvdXQuYWRkKGNhbmQuZ2V0KDApKTsKICBvdXQuc29ydChDb21wYXJhdG9yLmNvbXBhcmluZ0RvdWJsZSh4LT54LnN0YXJ0KSk7cmV0dXJuIG91dDsKIH0KIHByaXZhdGUgQ2xpcExvZ2ljKCl7fQp9Cg==").decode('utf-8'),encoding='utf-8');print('[v8] replaced: ClipLogic.java')
+sv=APP/'ClipsService.java';s8=sv.read_text(encoding='utf-8')
+if 'AYT_V8' not in s8:
+    SPLIT='"split".equals(args==null?"":args.optString("layout"))'
+    opt=[
+     ('r.addOption("--force-keyframes-at-cuts");',''),
+     ('r.addOption("--recode-video","mp4");',''),
+     ('r.addOption("-f","bestvideo[height<=720]+bestaudio/best[height<=720]/best");','r.addOption("-f",'+SPLIT+'?"bestvideo[height<=1080]+bestaudio/best[height<=1080]/best":"bestvideo[height<=720]+bestaudio/best[height<=720]/best");'),
+     ('r.addOption("-f","18/best[height<=720][ext=mp4]/bestvideo[height<=720]+bestaudio/best");','r.addOption("-f",'+SPLIT+'?"bestvideo[height<=1080]+bestaudio/best[height<=1080]/best":"18/best[height<=720][ext=mp4]/bestvideo[height<=720]+bestaudio/best");'),
+     ('"-c:v","libx264","-preset","ultrafast","-crf","20","-c:a","aac","-b:a","128k",chunk.getAbsolutePath()','"-c","copy","-avoid_negative_ts","make_zero",chunk.getAbsolutePath()'),
+     ('r.addOption("-f","best[height<=720]/best");','r.addOption("-f",'+SPLIT+'?"best[height<=1080]/best":"best[height<=720]/best");'),
+     ('"-crf","23"','"-crf","20"'),
+     ('"-vn","-ac","1","-ar","16000","-f","f32le"','"-vn","-af","highpass=f=100,lowpass=f=4000","-ac","1","-ar","16000","-f","f32le"'),
+    ]
+    for o,n in opt:
+        if o in s8: s8=s8.replace(o,n)
+        else: print('[v8] optional skipped:',o[:55])
+    OLDF='scale=720:400:force_original_aspect_ratio=increase,crop=720:400[c];[game]scale=720:880:force_original_aspect_ratio=decrease,pad=720:880:(ow-iw)/2:(oh-ih)/2:black[g]'
+    NEWF='scale=720:480:force_original_aspect_ratio=increase:flags=lanczos,crop=720:480,unsharp=5:5:0.5[c];[game]scale=720:800:force_original_aspect_ratio=increase:flags=lanczos,crop=720:800[g]'
+    assert OLDF in s8,'[v8] split filter anchor not found'
+    s8=s8.replace(OLDF,NEWF,1)
+    SEL='List<ClipLogic.Moment> selected=ClipLogic.select('
+    assert SEL in s8,'[v8] select anchor not found'
+    VOICE=('if(phrases.size()>=4){double[] pr=new double[phrases.size()];for(int q=0;q<pr.length;q++){ClipLogic.Phrase ph=phrases.get(q);int a0=Math.max(0,(int)(ph.start*16000)),a1=Math.min(audio.length,(int)(ph.end*16000));double sq=0;for(int k=a0;k<a1;k++)sq+=audio[k]*audio[k];pr[q]=a1>a0?Math.sqrt(sq/(a1-a0)):0;}'
+           'double[] so8=pr.clone();Arrays.sort(so8);double md8=so8[so8.length/2];List<ClipLogic.Phrase> keep8=new ArrayList<>();for(int q=0;q<pr.length;q++)if(pr[q]>=md8*0.45)keep8.add(phrases.get(q));phrases=keep8;} /* AYT_V8 streamer voice */\n  ')
+    s8=s8.replace(SEL,VOICE+SEL,1)
+    sv.write_text('// AYT_V8\n'+s8,encoding='utf-8');print('[v8] patched: ClipsService.java')
+cj8=root/'assets/clips.js';c8=cj8.read_text(encoding='utf-8')
+if 'AYT_V8' not in c8:
+    a='<label for="clip-layout">'
+    assert a in c8,'[v8] layout anchor not found'
+    c8=c8.replace(a,'<div id="clip-layout-tiles"></div>'+a,1)
+    c8=c8.replace('window.clipsStop=',r"""/* AYT_V8 layout templates */
+(function(){
+const T=[{k:'full',n:'Весь экран'},{k:'tl',n:'Вебка ↖',r:0,b:0},{k:'tr',n:'Вебка ↗',r:1,b:0},{k:'bl',n:'Вебка ↙',r:0,b:1},{k:'br',n:'Вебка ↘',r:1,b:1}];
+const CSS='<style id="ayt-lt-css">#clip-camera{display:none!important}.ayt-lt-h{font-size:12px;opacity:.75;margin:8px 0 6px}.ayt-lt{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:10px}.ayt-lt-t{border:2px solid transparent;border-radius:10px;padding:6px 2px;background:rgba(255,255,255,.05);display:flex;flex-direction:column;align-items:center;gap:4px;color:inherit;cursor:pointer}.ayt-lt-t.on{border-color:#ff4d4d;background:rgba(255,77,77,.1)}.ayt-lt-src{width:44px;height:25px;border-radius:3px;background:linear-gradient(135deg,#3b6e4a,#1d3527);position:relative}.ayt-lt-src i{position:absolute;width:12px;height:8px;background:#ffcf5a;border-radius:2px}.ayt-lt-ph{width:40px;height:71px;border-radius:6px;overflow:hidden;display:flex;flex-direction:column;background:#111}.ayt-lt-cam{flex:0 0 37%;background:linear-gradient(160deg,#ffcf5a,#c9822b);display:flex;align-items:center;justify-content:center;font-size:13px}.ayt-lt-game{flex:1;background:linear-gradient(160deg,#4f8a5f,#1d3527);display:flex;align-items:center;justify-content:center;font-size:13px}.ayt-lt-t small{font-size:10px;opacity:.85;text-align:center;line-height:1.1}</style>';
+function apply(t,silent){const sel=document.getElementById('clip-layout');if(!sel)return;sel.value=t.k==='full'?'portrait':'split';if(window.clipsLayout)clipsLayout(sel.value);if(t.k!=='full'){const w=25,h=28,set=(k,v)=>{const el=document.getElementById(k);if(el)el.value=v;};set('cameraW',w);set('cameraH',h);set('cameraX',t.r?100-w:0);set('cameraY',t.b?100-h:0);}localStorage.setItem('ayt-layout-tile',t.k);}
+function setup(){const box=document.getElementById('clip-layout-tiles'),sel=document.getElementById('clip-layout');if(!box||!sel||box.dataset.ok)return;box.dataset.ok=1;if(!document.getElementById('ayt-lt-css'))document.head.insertAdjacentHTML('beforeend',CSS);const lab=sel.closest('label');if(lab)lab.style.display='none';
+ const cur=()=>localStorage.getItem('ayt-layout-tile')||'full';
+ function render(){const c=cur();box.innerHTML='<p class="ayt-lt-h">Шаблон кадра · где вебка у стримера</p><div class="ayt-lt">'+T.map(t=>{const corner=t.k==='full'?'':'<i style="'+(t.r?'right:2px;':'left:2px;')+(t.b?'bottom:2px':'top:2px')+'"></i>';const ph=t.k==='full'?'<div class="ayt-lt-ph"><div class="ayt-lt-game">🎮</div></div>':'<div class="ayt-lt-ph"><div class="ayt-lt-cam">🙂</div><div class="ayt-lt-game">🎮</div></div>';return '<button type="button" class="ayt-lt-t'+(t.k===c?' on':'')+'" data-k="'+t.k+'"><div class="ayt-lt-src">'+corner+'</div>'+ph+'<small>'+t.n+'</small></button>';}).join('')+'</div>';
+  box.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{apply(T.find(t=>t.k===b.dataset.k));render();});}
+ const t0=T.find(t=>t.k===cur())||T[0];apply(t0,true);render();}
+setInterval(setup,500);
+})();
+"""+'window.clipsStop=',1)
+    cj8.write_text('/* AYT_V8 */\n'+c8,encoding='utf-8');print('[v8] patched: clips.js')
+print('[v8] done')
