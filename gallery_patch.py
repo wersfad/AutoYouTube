@@ -238,3 +238,16 @@ window.clipsCam=function(r,b){const w=25,h=28,set=(k,v)=>{const el=document.getE
 """
 patch5(root/'assets/clips.js',[(CAM_ANCHOR,CAM_UI),('window.clipsStop=',CAM_JS+'window.clipsStop=')],'assets/clips.js','/* AYT_V5 */\n')
 print('[v5] done')
+
+
+# ================= AYT_V6: live Twitch never fails on backlog, skips to fresh segments =================
+svc6=root/'android/app/src/main/java/com/wersfad/autoyoutube/ClipsService.java'
+s6=svc6.read_text(encoding='utf-8')
+if 'AYT_V6' not in s6:
+    old='if(completed-next>6)throw new IOException("Телефон не успевает обрабатывать эфир: накопилось больше 12 минут. Готовые клипы сохранены.");'
+    new=('if(completed-next>2){for(int k=next;k<completed-1;k++)new File(dir,String.format(Locale.US,"part-%06d.ts",k)).delete();next=completed-1;'
+         'phase("live","Телефон не успевает за эфиром: пропускаю старые фрагменты и беру свежие");} /* AYT_V6 */')
+    assert old in s6,'[v6] live backlog anchor not found in ClipsService.java'
+    s6=s6.replace(old,new,1)
+    svc6.write_text('// AYT_V6\n'+s6,encoding='utf-8');print('[v6] patched: ClipsService.java')
+print('[v6] done')
